@@ -348,6 +348,14 @@ textarea.fi{resize:vertical;min-height:68px;line-height:1.5}
       <svg viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="4.5" r="2.8" stroke="currentColor" stroke-width="1.3"/><path d="M1 12c0-3 2.5-5.5 5.5-5.5S12 9 12 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
       Admin
     </button>
+    <!-- Save indicator -->
+    <span id="save-ind" style="font-family:var(--fm);font-size:11px;color:var(--green);
+      letter-spacing:.5px;opacity:0;transition:opacity .4s;white-space:nowrap;font-weight:600"></span>
+    <!-- Reset button (admin only) -->
+    <button class="tbtn" id="btn-rst" onclick="resetToDefault()" style="display:none;color:var(--red);border-color:rgba(248,113,113,.35)" title="รีเซ็ตข้อมูลกลับค่าเริ่มต้น">
+      <svg viewBox="0 0 13 13" fill="none"><path d="M2 6.5A4.5 4.5 0 1 1 6.5 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><polyline points="2,4 2,6.5 4.5,6.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      รีเซ็ต
+    </button>
     <button class="tbtn" id="btn-lout" onclick="doLogout()" style="display:none">
       <svg viewBox="0 0 13 13" fill="none"><path d="M5.5 11H2a1 1 0 01-1-1V3a1 1 0 011-1h3.5" stroke="currentColor" stroke-width="1.3"/><line x1="8.5" y1="4.5" x2="12" y2="6.5" stroke="currentColor" stroke-width="1.3"/><line x1="12" y1="6.5" x2="8.5" y2="8.5" stroke="currentColor" stroke-width="1.3"/><line x1="5.5" y1="6.5" x2="12" y2="6.5" stroke="currentColor" stroke-width="1.3"/></svg>
       ออกจากระบบ
@@ -505,6 +513,7 @@ function applyRole(){
   document.getElementById('btn-add').style.display=a?'flex':'none';
   document.getElementById('btn-alog').style.display=a?'none':'flex';
   document.getElementById('btn-lout').style.display=a?'flex':'none';
+  document.getElementById('btn-rst').style.display=a?'flex':'none';
   document.getElementById('tb-badge').innerHTML=a?'<div class="tb-badge adm">&#9650; ADMIN</div>':'';
   render();
 }
@@ -583,7 +592,58 @@ let jobs=[
     start:'2026-08-03',end:'2026-08-28',proc:'',note:''},
 ];
 
-// BUG FIX: Sort jobs by start date, then return display order (1-based index as label)
+// ─── STORAGE ────────────────────────────────────
+const STORE_KEY   = 'lathe10m_jobs_v2';
+const STORE_IDKEY = 'lathe10m_nextid_v2';
+
+// Default dataset — used only when localStorage has NO saved data
+const DEFAULT_JOBS = JSON.parse(JSON.stringify(jobs));
+const DEFAULT_NEXTID = 12;
+
+function saveToStorage(){
+  try{
+    localStorage.setItem(STORE_KEY,   JSON.stringify(jobs));
+    localStorage.setItem(STORE_IDKEY, String(_nextId));
+    showSaveIndicator();
+  } catch(e){ toast('ไม่สามารถบันทึกข้อมูลได้: '+e.message,'err'); }
+}
+
+function loadFromStorage(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    const nid = localStorage.getItem(STORE_IDKEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(Array.isArray(parsed) && parsed.length > 0){
+        jobs = parsed;
+        _nextId = nid ? parseInt(nid) : Math.max(...parsed.map(j=>j.id)) + 1;
+        return true; // loaded from storage
+      }
+    }
+  } catch(e){ console.warn('Storage load error:',e); }
+  return false; // use default
+}
+
+function resetToDefault(){
+  if(!confirm('รีเซ็ตข้อมูลทั้งหมดกลับเป็นค่าเริ่มต้น? การดำเนินการนี้ไม่สามารถยกเลิกได้')) return;
+  localStorage.removeItem(STORE_KEY);
+  localStorage.removeItem(STORE_IDKEY);
+  jobs = JSON.parse(JSON.stringify(DEFAULT_JOBS));
+  _nextId = DEFAULT_NEXTID;
+  updateArea(); updateStats(); render();
+  toast('รีเซ็ตข้อมูลเรียบร้อยแล้ว','inf');
+}
+
+function showSaveIndicator(){
+  const el = document.getElementById('save-ind');
+  if(!el) return;
+  el.style.opacity='1';
+  el.textContent = '✓ บันทึกแล้ว';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.opacity='0'; }, 2500);
+}
+
+// ─── SORT ───────────────────────────────────────
 function sortedJobs(){ return [...jobs].sort((a,b)=>a.start.localeCompare(b.start)); }
 
 let pendCC=null, pendDel=null;
@@ -810,7 +870,7 @@ function saveJob(){
     // BUG FIX: Use newId() so IDs never collide with deleted ones
     jobs.push({id:newId(),name,area,owner,start,end,status,prio,proc,note});
   }
-  closeM('m-job'); updateArea(); updateStats(); render();
+  closeM('m-job'); updateArea(); updateStats(); render(); saveToStorage();
   toast(eid?'อัปเดตเรียบร้อย ✓':'เพิ่มงานใหม่เรียบร้อย ✓','ok');
 }
 
@@ -827,7 +887,7 @@ function doCC(){
       start:fmt(addD(parse(jobs[i].start),diff)),
       end:  fmt(addD(parse(jobs[i].end),diff))};
   });
-  pendCC=null; closeM('m-casc'); updateArea(); updateStats(); render();
+  pendCC=null; closeM('m-casc'); updateArea(); updateStats(); render(); saveToStorage();
   toast('บันทึกและขยับงานทั้งหมดเรียบร้อย ✓','ok');
 }
 
@@ -841,7 +901,7 @@ function openDel(id){
 function doDelete(){
   // BUG FIX: _nextId stays the same — deleted IDs are never reused
   jobs=jobs.filter(j=>j.id!==pendDel);
-  pendDel=null; closeM('m-del'); updateArea(); updateStats(); render();
+  pendDel=null; closeM('m-del'); updateArea(); updateStats(); render(); saveToStorage();
   toast('ลบงานเรียบร้อย','inf');
 }
 
@@ -867,8 +927,13 @@ function toast(msg,type='inf'){
 
 // ─── INIT ────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
+  const hadSaved = loadFromStorage(); // load saved data FIRST
   updateArea(); updateStats(); render();
   setTimeout(scrollToToday,350);
+  if(hadSaved){
+    // Show subtle indicator that data was loaded from storage
+    setTimeout(()=> toast('โหลดข้อมูลล่าสุดเรียบร้อย','inf'), 600);
+  }
 });
 </script>
 </body>
