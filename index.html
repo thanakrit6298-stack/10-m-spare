@@ -222,7 +222,7 @@ const SR=db.ref('lathe10m/settings');
 /* ═══════════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════════ */
-const _a=atob('QWRtaW5ATGF0aGUyMDI2'); // Admin@Lathe2026
+const _a=atob('d29ya3Nob3AyMDI2');
 const DEF_AREAS=["ช่างกลึงที่ 1","ช่างกลึงที่ 2","ช่างกลึงที่ 3","งานพิเศษ","งานซ่อมบำรุง","งานเร่งด่วน","ทั่วไป"];
 const STS=[{v:"pending",lb:"รอดำเนินการ",c:"#94a3b8"},{v:"in-progress",lb:"กำลังดำเนินการ",c:"#fbbf24"},{v:"completed",lb:"เสร็จสิ้น",c:"#34d399"},{v:"delayed",lb:"ล่าช้า",c:"#f87171"}];
 const MTs=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
@@ -336,9 +336,8 @@ function openLogin(){
       </div>
       <button onclick="doLogin()" style="width:100%;padding:13px;background:var(--grd);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:1.5px;text-transform:uppercase;font-family:inherit;">เข้าสู่ระบบ</button>
       <button onclick="closeM()" style="width:100%;padding:10px;margin-top:10px;background:transparent;border:1px solid #172a40;border-radius:8px;color:#324d66;font-size:12px;cursor:pointer;font-family:inherit;">ยกเลิก</button>
-      <div style="margin-top:18px;padding:12px 16px;background:#040a14;border-radius:8px;border:1px solid #0a1624;font-size:11px;color:#1a2d42;font-family:monospace;line-height:1.9;">
-        <span style="color:#fbbf24;font-weight:700;">Admin </span>: Admin@Lathe2026<br>
-        <span style="color:#34d399;font-weight:700;">Viewer</span>: เปิดลิงก์ดูได้เลย (ไม่ต้องล็อกอิน)
+      <div style="margin-top:18px;text-align:center;font-size:11px;color:#324d66;line-height:1.7;">
+        👁 ผู้เข้าชมทั่วไปสามารถดูตารางได้โดยไม่ต้องล็อกอิน
       </div>
     </div>
   </div>`;
@@ -896,7 +895,12 @@ function printGantt(){
         <span>📋 ${jobs.length} งาน | ถึง: ${last?fD(last.end):'—'}</span>
       </div>`;
   }
-  setTimeout(()=>{window.print();setTimeout(()=>{if(ph)ph.style.display='none';},600);},200);
+  // เรนเดอร์ gantt เวอร์ชันพิมพ์: ไม่ใช้ sticky (กันฟ้อนเลื่อน) + ตัด padding ส่วนเกิน
+  renderGantt(true);
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>{if(ph)ph.style.display='none';renderGantt(false);},500);
+  },200);
 }
 
 /* ═══════════════════════════════════════════════════════
