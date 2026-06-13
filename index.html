@@ -1,940 +1,929 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ตารางเวลางานเครื่องกลึง 10 เมตร</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ตารางเวลาเครื่องกลึง 10M — Thanakrit Engineer Workshop</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
-:root{
-  --bg:#0B1520;--bg2:#0F1D2D;--panel:#142030;--panel2:#1A2D42;--panel3:#213650;
-  --border:#1E3450;--border2:#284A6A;--border3:#3A6088;
-  --cyan:#22D3EE;--amber:#FBBF24;--green:#34D399;--red:#F87171;--orange:#FB923C;
-  --text:#EFF6FF;--text2:#8AB4D0;--text3:#4A7090;--text4:#2A4560;
-  --bar-plan:#1558A0;--bar-plan2:#1A70C8;
-  --bar-wip:#A04A00;--bar-wip2:#C86010;
-  --bar-done:#0A5A32;--bar-done2:#0F7A45;
-  --bar-hold:#6A1010;--bar-hold2:#901A1A;
-  --hol-sun:#05080F;--hol-sat:#08101A;
-  --fn:"Sarabun",sans-serif;--fm:"IBM Plex Mono",monospace;
+:root{--bg:#030c18;--bg2:#071422;--pan:#0c1629;--brd:#172a40;--brd2:#0a1624;--txt:#c5d8ea;--sub:#6e8fa8;--mut:#324d66;--fnt:#1e3252;--blue:#2b7de9;--grd:linear-gradient(135deg,#1a5cb4,#0896b3);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px;line-height:1.5;}
+::-webkit-scrollbar{width:6px;height:6px;}::-webkit-scrollbar-track{background:var(--bg2);}::-webkit-scrollbar-thumb{background:var(--brd);border-radius:3px;}
+input,select,textarea,button{font-family:inherit;}
+
+/* HEADER */
+#hdr{background:#040a16;border-bottom:1px solid var(--brd);padding:0 24px;display:flex;align-items:center;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.5);}
+.hlogo{width:40px;height:40px;background:var(--grd);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 0 15px rgba(26,92,180,.3);}
+.htitle{color:var(--txt);font-size:15px;font-weight:900;}
+.hsub{color:var(--mut);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;}
+.rbadge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;border-width:1px;border-style:solid;}
+.rbadge.admin{background:rgba(251,191,36,.1);color:#fbbf24;border-color:rgba(251,191,36,.3);}
+.rbadge.viewer{background:rgba(52,211,153,.1);color:#34d399;border-color:rgba(52,211,153,.3);}
+.btn-alog{background:rgba(43,125,233,.12);color:#5ba4f5;border:1px solid rgba(43,125,233,.3);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;}
+.hdate{color:#2a4a6b;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;}
+.hsync{color:var(--fnt);font-size:10px;}
+
+/* MAIN */
+#main{padding:24px;max-width:1500px;margin:0 auto;}
+
+/* STATS */
+.stats-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px;}
+.scard{background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:14px 16px;}
+.slbl{color:var(--mut);font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;}
+.snum{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;}
+
+/* TABS */
+.tab-bar{display:flex;align-items:center;border-bottom:1px solid var(--brd);margin-bottom:20px;padding-bottom:1px;flex-wrap:wrap;gap:4px;}
+.tb{background:none;border:none;cursor:pointer;padding:12px 20px;font-size:13px;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:6px;color:var(--mut);transition:all .15s;}
+.tb.active{color:#5ba4f5;font-weight:800;border-bottom-color:var(--blue);}
+.tab-actions{margin-left:auto;display:flex;gap:8px;align-items:center;padding:6px 0;flex-wrap:wrap;}
+
+/* BUTTONS */
+.btn-add{background:var(--grd);color:#fff;border:none;border-radius:6px;padding:9px 16px;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 0 16px rgba(26,92,180,.25);}
+.btn-print{background:linear-gradient(135deg,#155e3a,#0d7a4a);color:#fff;border:none;border-radius:6px;padding:9px 14px;cursor:pointer;font-size:13px;font-weight:700;}
+.btn-areas{background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;border:none;border-radius:6px;padding:9px 14px;cursor:pointer;font-size:13px;font-weight:700;}
+.btn-reset{background:transparent;color:var(--mut);border:1px solid var(--brd);border-radius:6px;padding:9px 12px;cursor:pointer;font-size:12px;}
+.btn-2{background:#162030;color:var(--sub);border:1px solid var(--brd);border-radius:6px;padding:9px 20px;cursor:pointer;font-size:13px;font-weight:600;}
+.btn-1{background:var(--grd);color:#fff;border:none;border-radius:6px;padding:9px 22px;cursor:pointer;font-size:13px;font-weight:700;}
+.btn-1:disabled{background:#101826;color:var(--mut);cursor:not-allowed;opacity:.5;}
+.btn-x{background:none;border:1px solid var(--brd);border-radius:6px;color:var(--sub);cursor:pointer;padding:6px 12px;font-size:14px;}
+.bico{background:transparent;border:1px solid var(--brd2);border-radius:4px;cursor:pointer;padding:3px 7px;font-size:12px;}
+.be{color:#5ba4f5;}.bd{color:#f87171;}
+
+/* PANEL */
+.panel{background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:24px;}
+
+/* GANTT */
+.g-legend{display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:#040d1a;border:1px solid var(--brd);border-radius:8px;margin-bottom:14px;}
+.leg{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--sub);}
+.legdot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+.pbanner{display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(21,94,58,.12);border:1px solid rgba(13,122,74,.28);border-radius:8px;margin-bottom:14px;color:var(--sub);font-size:12px;}
+
+/* TABLE */
+.fbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.fi{background:var(--bg2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);padding:8px 12px;font-size:12px;outline:none;}
+.fi:focus{border-color:var(--blue);}
+.twrap{overflow:auto;border-radius:8px;border:1px solid var(--brd);}
+table{width:100%;border-collapse:collapse;min-width:1200px;}
+thead th{background:#040c17;color:var(--mut);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:11px 14px;text-align:left;border-bottom:2px solid var(--brd);white-space:nowrap;}
+tbody td{padding:9px 14px;border-bottom:1px solid var(--brd2);font-size:13px;color:var(--sub);vertical-align:middle;}
+tr.ar{background:rgba(43,125,233,.06);}
+tr.er{background:rgba(8,15,28,.5);}
+tbody tr:hover{background:rgba(43,125,233,.03);}
+.sbadge{border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;white-space:nowrap;border-width:1px;border-style:solid;}
+.abadge{background:rgba(99,102,241,.1);color:#a5b4fc;border:1px solid rgba(99,102,241,.22);border-radius:12px;padding:2px 9px;font-size:11px;font-weight:600;}
+.ssel{background:var(--pan);border:1px solid var(--brd);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;}
+
+/* MODALS */
+.mover{position:fixed;inset:0;background:rgba(0,0,0,.87);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.mbox{background:var(--bg2);border:1px solid var(--brd);border-radius:12px;width:100%;max-width:640px;max-height:92vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.8);}
+.mhd{padding:20px 26px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1;}
+.mbody{padding:24px;}
+.albox{background:rgba(6,12,22,.98);border:1px solid var(--brd);border-radius:14px;padding:44px 48px;width:400px;max-width:92vw;box-shadow:0 0 80px rgba(26,92,180,.1),0 30px 60px rgba(0,0,0,.8);position:relative;}
+.altop{position:absolute;top:0;left:48px;right:48px;height:2px;background:var(--grd);border-radius:0 0 4px 4px;}
+
+/* FORM */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.ff{display:flex;flex-direction:column;gap:5px;}
+.flbl{color:var(--sub);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.finp{background:#060e1a;border:1px solid var(--brd);border-radius:6px;color:var(--txt);padding:9px 12px;font-size:13px;outline:none;width:100%;}
+.finp:focus{border-color:var(--blue);}
+.finp[type=date]{color-scheme:dark;}
+textarea.finp{resize:vertical;line-height:1.5;min-height:72px;}
+.wbox{margin-top:14px;padding:11px 16px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.18);border-radius:8px;color:#fbbf24;font-size:12px;line-height:1.7;}
+.ebox{padding:11px 16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;color:#f87171;font-size:12px;margin-top:12px;}
+
+/* AREA MANAGER */
+.arow{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--brd2);}
+.arow:last-child{border-bottom:none;}
+.adot{width:8px;height:8px;background:#00b8d9;border-radius:50%;flex-shrink:0;}
+.abs{padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;border-width:1px;border-style:solid;font-weight:500;}
+.abs-e{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25);color:#60a5fa;}
+.abs-d{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#f87171;}
+.abs-s{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.25);color:#34d399;font-weight:600;}
+.abs-c{background:rgba(100,116,139,.1);border-color:rgba(100,116,139,.25);color:var(--sub);}
+
+/* SUMMARY */
+.stitle{color:var(--sub);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
+
+/* FIREBASE STATUS */
+#fbst{position:fixed;bottom:18px;right:18px;z-index:500;font-size:11px;font-family:monospace;padding:5px 14px;border-radius:20px;background:rgba(4,10,20,.95);border:1px solid;transition:all .5s;}
+#fbst.ok{color:#34d399;border-color:rgba(52,211,153,.3);}
+#fbst.err{color:#f87171;border-color:rgba(248,113,113,.3);}
+#fbst.ld{color:#fbbf24;border-color:rgba(251,191,36,.3);}
+
+/* CREDIT */
+#credit{text-align:center;padding:16px 24px;color:var(--fnt);font-size:12px;letter-spacing:1px;border-top:1px solid var(--brd2);margin-top:8px;}
+
+/* PRINT HEADER */
+#phdr{display:none;background:#0f2540;color:#fff;padding:10px 16px;border-radius:6px;margin-bottom:10px;}
+#phdr h1{font-size:16px;color:#7ec8f0;font-weight:900;margin-bottom:2px;}
+.psub{font-size:10px;color:#5a8ab0;}
+.pmeta{display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:#4a7a9a;border-top:1px solid #1e4060;padding-top:6px;}
+
+/* PRINT */
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  @page{size:A4 landscape;margin:8mm 10mm;}
+  body{background:#fff!important;}
+  #hdr,.stats-bar,.tab-bar,#credit,.g-legend,.pbanner,#fbst{display:none!important;}
+  .panel{background:#fff!important;border:none!important;padding:0!important;}
+  #phdr{display:block!important;}
+  #tc-table,#tc-summary{display:none!important;}
+  #tc-gantt{display:block!important;}
+  #gcon{overflow:visible!important;border:none!important;}
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--fn);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 
-/* ── LOGIN OVERLAY ── */
-#login-ov{position:fixed;inset:0;background:rgba(5,10,20,.96);display:none;
-  align-items:center;justify-content:center;z-index:9000;backdrop-filter:blur(10px)}
-.lcard{background:var(--panel2);border:1px solid var(--border2);border-radius:10px;
-  padding:44px 40px;width:400px;max-width:94vw;position:relative;overflow:hidden}
-.lcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--cyan),var(--amber))}
-.lclose{position:absolute;top:14px;right:16px;background:none;border:none;
-  color:var(--text3);font-size:22px;cursor:pointer;line-height:1;transition:color .15s}
-.lclose:hover{color:var(--text)}
-.lbrand{display:flex;align-items:center;gap:12px;margin-bottom:26px}
-.lbrand-text{font-family:var(--fm);font-size:10px;letter-spacing:2px;color:var(--text3);
-  text-transform:uppercase;line-height:1.7}
-.lbrand-text strong{color:var(--cyan);display:block;font-size:14px;letter-spacing:1px}
-.lcard h2{font-size:21px;font-weight:700;margin-bottom:4px}
-.lcard .lsub{font-size:11px;font-family:var(--fm);color:var(--text3);margin-bottom:26px;letter-spacing:.5px}
-.lf{margin-bottom:16px}
-.lf label{display:block;font-size:10px;font-family:var(--fm);font-weight:700;
-  letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
-.lf input{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;
-  padding:11px 14px;color:var(--text);font-family:var(--fm);font-size:14px;outline:none;
-  transition:border-color .15s,box-shadow .15s}
-.lf input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,211,238,.12)}
-.lerr{color:var(--red);font-size:12px;font-family:var(--fm);margin-top:6px;display:none}
-.lbtn{width:100%;margin-top:8px;padding:13px;background:var(--cyan);border:none;
-  border-radius:5px;color:var(--bg);font-family:var(--fm);font-weight:700;font-size:13px;
-  letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .15s}
-.lbtn:hover{background:#38BDF8}
-.lhint{margin-top:16px;font-size:10px;font-family:var(--fm);color:var(--text4);
-  text-align:center;letter-spacing:.5px}
-
-/* ── TOPBAR ── */
-.topbar{background:var(--panel);border-bottom:2px solid var(--border2);height:58px;
-  padding:0 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:500}
-.tb-logo{display:flex;align-items:center;gap:9px;flex-shrink:0}
-.tb-title{font-family:var(--fm);font-size:13px;font-weight:700;letter-spacing:.5px;
-  color:var(--text);white-space:nowrap}
-.tb-div{width:1px;height:26px;background:var(--border2);flex-shrink:0}
-.tb-sub{font-family:var(--fm);font-size:10px;color:var(--text3);letter-spacing:1px;white-space:nowrap}
-.tb-sp{flex:1}
-.tb-badge{font-family:var(--fm);font-size:10px;letter-spacing:1px;padding:4px 11px;
-  border-radius:3px;border:1px solid;font-weight:700;white-space:nowrap}
-.tb-badge.adm{color:var(--amber);border-color:var(--amber);background:rgba(251,191,36,.08)}
-.tbtn{display:flex;align-items:center;gap:6px;background:transparent;
-  border:1px solid var(--border2);border-radius:5px;color:var(--text2);
-  padding:7px 15px;font-size:13px;font-family:var(--fn);cursor:pointer;
-  transition:all .15s;white-space:nowrap;font-weight:500}
-.tbtn:hover{border-color:var(--border3);color:var(--text);background:var(--panel2)}
-.tbtn.pri{background:var(--cyan);border-color:var(--cyan);color:var(--bg);font-weight:700}
-.tbtn.pri:hover{background:#38BDF8}
-.tbtn svg{width:13px;height:13px;flex-shrink:0}
-
-/* ── MAIN ── */
-.main{padding:20px 24px;display:flex;flex-direction:column;gap:18px}
-
-/* ── STAT CARDS ── */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.scard{background:var(--panel2);border:1px solid var(--border);border-radius:8px;
-  padding:16px 20px 14px;position:relative;overflow:hidden}
-.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.sc1::before{background:var(--cyan)} .sc2::before{background:var(--green)}
-.sc3::before{background:var(--amber)} .sc4::before{background:var(--red)}
-.sc-lbl{font-size:10px;font-family:var(--fm);color:var(--text3);letter-spacing:1px;
-  text-transform:uppercase;margin-bottom:6px;font-weight:700}
-.sc-val{font-size:34px;font-family:var(--fm);font-weight:700;line-height:1}
-.sc1 .sc-val{color:var(--cyan)} .sc2 .sc-val{color:var(--green)}
-.sc3 .sc-val{color:var(--amber)} .sc4 .sc-val{color:var(--red)}
-.sc-sub{font-size:11px;color:var(--text3);margin-top:3px}
-
-/* ── TOOLBAR ── */
-.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.tf{display:flex;gap:10px;align-items:center;flex:1;flex-wrap:wrap}
-.ti{background:var(--panel2);border:1px solid var(--border2);border-radius:5px;
-  padding:9px 13px;color:var(--text);font-family:var(--fn);font-size:13px;
-  outline:none;transition:border-color .15s}
-.ti:focus{border-color:var(--cyan)}
-.ti::placeholder{color:var(--text3)}
-.ti-s{width:270px} .ti-sel{width:148px;cursor:pointer}
-.leg{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
-.li{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);font-weight:500}
-.ld{width:14px;height:10px;border-radius:2px;flex-shrink:0}
-
-/* ── SECTION TITLE ── */
-.sec{display:flex;align-items:center;gap:10px;font-family:var(--fm);font-size:11px;
-  font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3)}
-.sec::after{content:'';flex:1;height:1px;background:var(--border2)}
-
-/* ── SCHEDULE WRAPPER ── */
-.sw{background:var(--panel);border:1px solid var(--border2);border-radius:8px;overflow:hidden}
-.ss{overflow-x:auto;overflow-y:visible}
-.ss::-webkit-scrollbar{height:7px}
-.ss::-webkit-scrollbar-track{background:var(--bg2)}
-.ss::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
-.ss::-webkit-scrollbar-thumb:hover{background:var(--border3)}
-.sh{text-align:center;font-size:11px;font-family:var(--fm);color:var(--text4);
-  padding:7px;border-top:1px solid var(--border);letter-spacing:1px}
-
-/* ── TABLE ── */
-table.gt{border-collapse:collapse;min-width:100%}
-table.gt th,table.gt td{border:1px solid var(--border);padding:0}
-
-/* Header row 1 - column labels */
-.hr1 th{background:var(--bg2);font-family:var(--fm);font-size:11px;font-weight:700;
-  letter-spacing:.8px;text-transform:uppercase;color:var(--cyan);
-  padding:11px 10px;white-space:nowrap;position:sticky;top:0;z-index:20;
-  border-bottom:2px solid var(--border2)}
-
-/* Month row */
-.hr-m th{background:var(--bg2);padding:0;position:sticky;z-index:18;border-bottom:0}
-.mth{font-family:var(--fm);font-size:10px;font-weight:700;letter-spacing:1px;
-  text-align:center;padding:5px 3px 3px;color:var(--amber);text-transform:uppercase;
-  border-bottom:1px solid var(--amber);background:var(--bg2)}
-
-/* Day row */
-.hr-d th{background:var(--bg2);padding:0;position:sticky;z-index:16;
-  border-bottom:2px solid var(--border2)}
-.dw{display:flex;flex-direction:column;align-items:center;padding:3px 1px 3px;gap:1px}
-.dn{font-family:var(--fm);font-size:10px;font-weight:700;color:var(--text2);line-height:1}
-.dd{font-family:var(--fm);font-size:8px;color:var(--text4);line-height:1}
-.dn.tod{color:var(--amber)} .dd.tod{color:var(--amber);opacity:.8}
-.dn.hol{color:var(--red);opacity:.5} .dd.hol{color:var(--red);opacity:.35}
-
-/* Fixed col widths */
-.c0{width:52px;min-width:52px}
-.c1{width:240px;min-width:180px}
-.c2{width:108px;min-width:88px}
-.c3{width:140px;min-width:110px}
-.c4{width:106px;min-width:90px}
-.c5{width:175px;min-width:130px}
-.c6{width:155px;min-width:120px}
-.dc{width:28px;min-width:28px}
-
-/* Body rows */
-tbody tr{background:var(--panel);transition:background .12s}
-tbody tr:hover{background:var(--panel2)}
-tbody tr:nth-child(even){background:color-mix(in srgb,var(--panel) 55%,var(--bg2))}
-tbody tr:nth-child(even):hover{background:var(--panel2)}
-
-.tc0{text-align:center;padding:0 6px;vertical-align:middle}
-.tc1{padding:8px 11px;vertical-align:top}
-.tc2{padding:6px 10px;vertical-align:middle}
-.tc3{padding:6px 10px;font-size:12px;color:var(--text2);vertical-align:middle}
-.tc4{padding:6px 8px;text-align:center;vertical-align:middle}
-.tc5{padding:6px 10px;font-size:12px;color:var(--text2);vertical-align:middle;line-height:1.4}
-.tc6{padding:6px 10px;font-size:12px;color:var(--text3);vertical-align:middle;line-height:1.4;font-style:italic}
-.tcd{padding:0;vertical-align:middle}
-
-.jname{font-size:14px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:2px}
-.jinfo{font-size:10px;font-family:var(--fm);color:var(--text3);margin-bottom:3px;line-height:1.4}
-.abr{display:flex;gap:5px;margin-top:5px}
-.ab{padding:3px 9px;font-size:11px;font-family:var(--fn);border-radius:3px;
-  cursor:pointer;transition:all .15s;font-weight:600;border:1px solid;white-space:nowrap}
-.ab-e{background:rgba(34,211,238,.06);border-color:rgba(34,211,238,.25);color:var(--cyan)}
-.ab-e:hover{background:rgba(34,211,238,.14);border-color:var(--cyan)}
-.ab-d{background:rgba(248,113,113,.06);border-color:rgba(248,113,113,.25);color:var(--red)}
-.ab-d:hover{background:rgba(248,113,113,.14);border-color:var(--red)}
-
-/* Area pill */
-.ap{display:inline-block;padding:3px 9px;border-radius:10px;font-size:11px;
-  font-family:var(--fm);font-weight:600;background:rgba(34,211,238,.07);
-  border:1px solid rgba(34,211,238,.18);color:var(--cyan);letter-spacing:.2px;
-  white-space:nowrap}
-
-/* Priority bar */
-.pb{display:inline-block;width:3px;height:26px;border-radius:2px;
-  margin-right:7px;flex-shrink:0;vertical-align:middle}
-.pb-h{background:var(--red)} .pb-n{background:var(--border3)} .pb-l{background:var(--text4)}
-
-/* Status badge */
-.sb{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
-  border-radius:16px;font-size:11px;font-family:var(--fn);font-weight:700;
-  border:1px solid;white-space:nowrap;line-height:1.2}
-.sb::before{content:'';width:5px;height:5px;border-radius:50%;
-  background:currentColor;flex-shrink:0}
-.sb-dn{background:rgba(52,211,153,.1);color:var(--green);border-color:rgba(52,211,153,.28)}
-.sb-ip{background:rgba(34,211,238,.1);color:var(--cyan);border-color:rgba(34,211,238,.28)}
-.sb-pd{background:rgba(251,191,36,.1);color:var(--amber);border-color:rgba(251,191,36,.28)}
-.sb-hd{background:rgba(248,113,113,.1);color:var(--red);border-color:rgba(248,113,113,.28)}
-
-/* ── GANTT CELLS ── */
-/* Improved visibility: taller colored cells with inner stripe */
-.tcd{height:36px}
-.bar-plan{position:relative;overflow:hidden}
-.bar-plan::after{content:'';position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(255,255,255,.12) 0%,transparent 50%,rgba(0,0,0,.15) 100%)}
-.c-plan{background:var(--bar-plan)}
-.c-wip {background:var(--bar-wip)}
-.c-done{background:var(--bar-done)}
-.c-hold{background:var(--bar-hold)}
-/* Today marker */
-.c-tod-mark{outline:2px solid var(--amber);outline-offset:-2px;position:relative;z-index:3}
-.c-tod-empty{background:rgba(251,191,36,.05)}
-/* Holidays */
-.c-sun{background:var(--hol-sun)!important}
-.c-sat{background:var(--hol-sat)!important}
-/* First/last bar cell: rounded ends */
-.bar-start{border-radius:4px 0 0 4px}
-.bar-end  {border-radius:0 4px 4px 0}
-.bar-solo {border-radius:4px}
-
-/* ── MODALS ── */
-.mov{position:fixed;inset:0;background:rgba(4,10,20,.9);z-index:800;
-  display:none;align-items:center;justify-content:center;backdrop-filter:blur(5px)}
-.mov.open{display:flex}
-.mbox{background:var(--panel2);border:1px solid var(--border2);border-radius:9px;
-  width:590px;max-width:96vw;max-height:93vh;overflow-y:auto;position:relative}
-.mbox::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,var(--cyan),var(--amber))}
-.mh{padding:20px 24px 16px;border-bottom:1px solid var(--border2);
-  display:flex;align-items:center;justify-content:space-between}
-.mh-t{font-size:15px;font-weight:700}
-.mx{background:none;border:none;color:var(--text3);font-size:22px;
-  cursor:pointer;padding:0 4px;line-height:1;transition:color .1s}
-.mx:hover{color:var(--text)}
-.mb{padding:20px 24px}
-.mf{padding:14px 24px;border-top:1px solid var(--border2);
-  display:flex;gap:10px;justify-content:flex-end}
-
-.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.fg{margin-bottom:16px}
-.fg label{display:block;font-size:10px;font-family:var(--fm);font-weight:700;
-  letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
-.fi{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;
-  padding:10px 12px;color:var(--text);font-family:var(--fn);font-size:13px;
-  outline:none;transition:border-color .15s}
-.fi:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,211,238,.08)}
-.fi.fm{font-family:var(--fm)}
-textarea.fi{resize:vertical;min-height:68px;line-height:1.5}
-.fi-req{color:var(--red)}
-
-.casc-box{background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.2);
-  border-radius:5px;padding:11px 14px;font-size:12px;font-family:var(--fm);
-  color:var(--cyan);display:flex;align-items:flex-start;gap:8px;
-  margin-top:4px;line-height:1.5;display:none}
-
-.btn-x{background:transparent;border:1px solid var(--border2);border-radius:5px;
-  color:var(--text2);padding:9px 18px;font-size:13px;font-family:var(--fn);
-  cursor:pointer;transition:all .15s;font-weight:500}
-.btn-x:hover{border-color:var(--border3);color:var(--text)}
-.btn-ok{background:var(--cyan);border:none;border-radius:5px;color:var(--bg);
-  padding:9px 22px;font-size:13px;font-family:var(--fn);font-weight:700;
-  cursor:pointer;transition:background .15s}
-.btn-ok:hover{background:#38BDF8}
-.btn-rm{background:var(--red);border:none;border-radius:5px;color:#fff;
-  padding:9px 22px;font-size:13px;font-family:var(--fn);font-weight:700;cursor:pointer}
-
-.cl{max-height:200px;overflow-y:auto;border:1px solid var(--border);
-  border-radius:5px;background:var(--bg2)}
-.ci{display:flex;justify-content:space-between;align-items:center;
-  padding:9px 13px;border-bottom:1px solid var(--border);font-size:12px}
-.ci:last-child{border-bottom:none}
-.ci-s{font-family:var(--fm);color:var(--amber);font-weight:700}
-
-/* ── TOAST ── */
-.tc{position:fixed;bottom:26px;right:26px;z-index:9999;
-  display:flex;flex-direction:column;gap:7px;pointer-events:none}
-.toast{background:var(--panel3);border:1px solid var(--border2);border-radius:7px;
-  padding:12px 17px;font-size:13px;font-family:var(--fn);
-  display:flex;align-items:center;gap:9px;min-width:260px;
-  animation:tIn .2s ease;box-shadow:0 8px 32px rgba(0,0,0,.5);
-  pointer-events:auto;font-weight:500}
-.toast.ok{border-left:4px solid var(--green)}
-.toast.err{border-left:4px solid var(--red)}
-.toast.inf{border-left:4px solid var(--cyan)}
-@keyframes tIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+/* MOBILE */
+@media (max-width:768px){
+  #hdr{padding:10px 14px;height:auto;min-height:58px;flex-wrap:wrap;gap:10px;}
+  .hsub{display:none;}
+  .htitle{font-size:13px;}
+  .hlogo{width:34px;height:34px;font-size:18px;}
+  #main{padding:14px 12px;}
+  .stats-bar{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .scard{padding:11px 12px;}
+  .snum{font-size:21px;}
+  .tab-bar{gap:2px;}
+  .tb{padding:9px 12px;font-size:12px;}
+  .tab-actions{width:100%;margin-left:0;}
+  .panel{padding:14px;}
+  .fgrid{grid-template-columns:1fr;}
+  .mover{padding:10px;align-items:flex-end;}
+  .mbox{max-height:90vh;border-radius:12px 12px 0 0;}
+  .albox{width:100%;max-width:100%;padding:32px 20px;}
+  .fbar{flex-direction:column;align-items:stretch;}
+  .fbar .fi{width:100%;}
+  .fbar > div{margin-left:0!important;text-align:left;}
+}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login-ov">
-  <div class="lcard">
-    <div class="lcard::before"></div>
-    <button class="lclose" onclick="closeLogin()">&#10005;</button>
-    <div class="lbrand">
-      <svg viewBox="0 0 36 36" fill="none" width="36" height="36">
-        <rect x="1" y="1" width="34" height="34" rx="4" stroke="#22D3EE" stroke-width="1.5"/>
-        <rect x="6" y="13" width="24" height="3" rx="1.5" fill="#22D3EE" opacity=".5"/>
-        <rect x="6" y="19" width="16" height="3" rx="1.5" fill="#22D3EE" opacity=".3"/>
-        <circle cx="28" cy="21" r="5.5" stroke="#FBBF24" stroke-width="1.5"/>
-        <line x1="28" y1="8" x2="28" y2="15.5" stroke="#FBBF24" stroke-width="1.5"/>
-        <line x1="21.5" y1="21" x2="35" y2="21" stroke="#FBBF24" stroke-width="1.5"/>
-      </svg>
-      <div class="lbrand-text"><strong>MACHINING SCHEDULE</strong>เครื่องกลึง 10 เมตร</div>
+<div id="fbst" class="ld">⟳ กำลังเชื่อมต่อ...</div>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div style="display:flex;align-items:center;gap:12px;margin-right:auto;">
+    <div class="hlogo">⚙</div>
+    <div>
+      <div class="htitle">10M Lathe Scheduling System</div>
+      <div class="hsub">ระบบบริหารตารางเวลาเครื่องกลึง CNC 10 เมตร · Firebase Realtime</div>
     </div>
-    <h2>เข้าสู่ระบบ Admin</h2>
-    <p class="lsub">// ADMINISTRATOR ACCESS ONLY</p>
-    <div class="lf"><label>ชื่อผู้ใช้งาน</label>
-      <input type="text" id="lu" placeholder="username" autocomplete="off"></div>
-    <div class="lf"><label>รหัสผ่าน</label>
-      <input type="password" id="lp" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" autocomplete="off"></div>
-    <div class="lerr" id="lerr">&#10007; ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
-    <button class="lbtn" onclick="doLogin()">เข้าสู่ระบบ</button>
-    <div class="lhint">username: admin &nbsp;/&nbsp; password: admin1234</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div style="text-align:right;">
+      <div id="hdate" class="hdate"></div>
+      <div id="hsync" class="hsync"></div>
+    </div>
+    <div id="hbadge"></div>
+    <div id="hacts"></div>
   </div>
 </div>
 
-<!-- APP -->
-<div id="app" style="display:flex;flex-direction:column;min-height:100vh">
-  <div class="topbar">
-    <div class="tb-logo">
-      <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
-        <rect x="1" y="1" width="26" height="26" rx="3" stroke="#22D3EE" stroke-width="1.5"/>
-        <rect x="4.5" y="9.5" width="19" height="2.5" rx="1.2" fill="#22D3EE" opacity=".55"/>
-        <rect x="4.5" y="15" width="13" height="2.5" rx="1.2" fill="#22D3EE" opacity=".3"/>
-        <circle cx="22" cy="16.5" r="4" stroke="#FBBF24" stroke-width="1.5"/>
-        <line x1="22" y1="7" x2="22" y2="12.5" stroke="#FBBF24" stroke-width="1.5"/>
-        <line x1="18" y1="16.5" x2="27" y2="16.5" stroke="#FBBF24" stroke-width="1.5"/>
-      </svg>
-    </div>
-    <div class="tb-title">LATHE 10M &middot; SCHEDULE</div>
-    <div class="tb-div"></div>
-    <div class="tb-sub">พ.ค. 2026 &mdash; ธ.ค. 2026</div>
-    <div class="tb-sp"></div>
-    <div id="tb-badge"></div>
-    <button class="tbtn" onclick="scrollToToday()">
-      <svg viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.3"/><line x1="6.5" y1="3.5" x2="6.5" y2="6.5" stroke="currentColor" stroke-width="1.3"/><line x1="6.5" y1="6.5" x2="9" y2="8" stroke="currentColor" stroke-width="1.3"/></svg>
-      วันนี้
-    </button>
-    <button class="tbtn pri" id="btn-add" onclick="openAdd()" style="display:none">
-      <svg viewBox="0 0 13 13" fill="none"><line x1="6.5" y1="1" x2="6.5" y2="12" stroke="currentColor" stroke-width="1.6"/><line x1="1" y1="6.5" x2="12" y2="6.5" stroke="currentColor" stroke-width="1.6"/></svg>
-      เพิ่มงาน
-    </button>
-    <button class="tbtn" id="btn-alog" onclick="openLogin()" style="display:flex">
-      <svg viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="4.5" r="2.8" stroke="currentColor" stroke-width="1.3"/><path d="M1 12c0-3 2.5-5.5 5.5-5.5S12 9 12 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-      Admin
-    </button>
-    <!-- Save indicator -->
-    <span id="save-ind" style="font-family:var(--fm);font-size:11px;color:var(--green);
-      letter-spacing:.5px;opacity:0;transition:opacity .4s;white-space:nowrap;font-weight:600"></span>
-    <!-- Reset button (admin only) -->
-    <button class="tbtn" id="btn-rst" onclick="resetToDefault()" style="display:none;color:var(--red);border-color:rgba(248,113,113,.35)" title="รีเซ็ตข้อมูลกลับค่าเริ่มต้น">
-      <svg viewBox="0 0 13 13" fill="none"><path d="M2 6.5A4.5 4.5 0 1 1 6.5 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><polyline points="2,4 2,6.5 4.5,6.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      รีเซ็ต
-    </button>
-    <button class="tbtn" id="btn-lout" onclick="doLogout()" style="display:none">
-      <svg viewBox="0 0 13 13" fill="none"><path d="M5.5 11H2a1 1 0 01-1-1V3a1 1 0 011-1h3.5" stroke="currentColor" stroke-width="1.3"/><line x1="8.5" y1="4.5" x2="12" y2="6.5" stroke="currentColor" stroke-width="1.3"/><line x1="12" y1="6.5" x2="8.5" y2="8.5" stroke="currentColor" stroke-width="1.3"/><line x1="5.5" y1="6.5" x2="12" y2="6.5" stroke="currentColor" stroke-width="1.3"/></svg>
-      ออกจากระบบ
-    </button>
+<!-- MAIN -->
+<div id="main">
+  <div id="sbar" class="stats-bar"></div>
+  <div class="tab-bar">
+    <button class="tb active" id="tbtn-gantt" onclick="swTab('gantt',this)">📊 Gantt Chart</button>
+    <button class="tb" id="tbtn-table" onclick="swTab('table',this)">📋 ตารางงาน</button>
+    <button class="tb" id="tbtn-summary" onclick="swTab('summary',this)">📈 สรุปภาพรวม</button>
+    <div class="tab-actions" id="tacts"></div>
   </div>
-
-  <div class="main">
-    <div class="stats" id="stats"></div>
-    <div class="sec">GANTT CHART &mdash; ตารางเวลางานเครื่องกลึง 10 เมตร</div>
-    <div class="toolbar">
-      <div class="tf">
-        <input class="ti ti-s" type="text" id="qs"
-          placeholder="&#128269;  ค้นหาชื่องาน / เจ้าของ / พื้นที่..." oninput="render()">
-        <select class="ti ti-sel" id="qst" onchange="render()">
-          <option value="">สถานะทั้งหมด</option>
-          <option value="done">&#10003; เสร็จแล้ว</option>
-          <option value="inprog">&#9654; ดำเนินการ</option>
-          <option value="pending">&#9711; รอดำเนินการ</option>
-          <option value="hold">&#9888; รอ/ระงับ</option>
-        </select>
-        <select class="ti ti-sel" id="qa" onchange="render()">
-          <option value="">พื้นที่ทั้งหมด</option>
-        </select>
-      </div>
-      <div class="leg">
-        <div class="li"><div class="ld" style="background:var(--bar-plan)"></div>แผนงาน</div>
-        <div class="li"><div class="ld" style="background:var(--bar-wip)"></div>ดำเนินการ</div>
-        <div class="li"><div class="ld" style="background:var(--bar-done)"></div>เสร็จแล้ว</div>
-        <div class="li"><div class="ld" style="background:var(--bar-hold)"></div>รอ/ระงับ</div>
-        <div class="li"><div class="ld" style="background:var(--hol-sat);border:1px solid var(--border2)"></div>วันหยุด</div>
-      </div>
-    </div>
-
-    <div class="sw">
-      <div class="ss" id="ss">
-        <table class="gt"><thead id="gh"></thead><tbody id="gb"></tbody></table>
-      </div>
-      <div class="sh">&#9664; เลื่อนซ้าย-ขวาเพื่อดูตารางทั้งหมด &#9654;</div>
-    </div>
+  <div class="panel">
+    <div id="phdr"></div>
+    <div id="tc-gantt"></div>
+    <div id="tc-table" style="display:none;"></div>
+    <div id="tc-summary" style="display:none;"></div>
   </div>
 </div>
 
-<!-- MODAL: ADD/EDIT -->
-<div class="mov" id="m-job">
-  <div class="mbox">
-    <div class="mh"><span class="mh-t" id="m-job-t">เพิ่มงานใหม่</span>
-      <button class="mx" onclick="closeM('m-job')">&#10005;</button></div>
-    <div class="mb">
-      <input type="hidden" id="f-id">
-      <div class="fg"><label>ชื่องาน <span class="fi-req">*</span></label>
-        <input class="fi" type="text" id="f-name" placeholder="เช่น ซ่อมเพลา Size press leadin..."></div>
-      <div class="frow">
-        <div class="fg"><label>พื้นที่ / Area</label>
-          <input class="fi" type="text" id="f-area" placeholder="เช่น Size Press, ETP2"></div>
-        <div class="fg"><label>เจ้าของงาน</label>
-          <input class="fi" type="text" id="f-owner" placeholder="เช่น nattanon / 6229"></div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label>วันที่เริ่ม <span class="fi-req">*</span></label>
-          <input class="fi fm" type="date" id="f-start"></div>
-        <div class="fg"><label>วันที่สิ้นสุด <span class="fi-req">*</span></label>
-          <input class="fi fm" type="date" id="f-end"></div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label>สถานะ</label>
-          <select class="fi" id="f-st">
-            <option value="pending">รอดำเนินการ</option>
-            <option value="inprog">กำลังดำเนินการ</option>
-            <option value="done">เสร็จแล้ว</option>
-            <option value="hold">รอวัสดุ / ระงับ</option>
-          </select></div>
-        <div class="fg"><label>ความสำคัญ</label>
-          <select class="fi" id="f-pr">
-            <option value="normal">ปกติ</option>
-            <option value="high">เร่งด่วน &#9888;</option>
-            <option value="low">ต่ำ</option>
-          </select></div>
-      </div>
-      <div class="fg"><label>กระบวนการ</label>
-        <input class="fi" type="text" id="f-proc" placeholder="เช่น เบิ้มเดิมเนื้อ / กลึงร่วมศูนย์"></div>
-      <div class="fg"><label>หมายเหตุ</label>
-        <textarea class="fi" id="f-note" placeholder="รายละเอียดเพิ่มเติม / ข้อสังเกต..."></textarea></div>
-      <div class="casc-box" id="cn">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2"/><line x1="7" y1="5" x2="7" y2="10" stroke="currentColor" stroke-width="1.2"/><circle cx="7" cy="3.5" r=".7" fill="currentColor"/></svg>
-        <span>เมื่อเลื่อนวันเริ่มงาน ระบบจะขยับงานถัดไปทั้งหมดโดยอัตโนมัติ</span>
-      </div>
-    </div>
-    <div class="mf">
-      <button class="btn-x" onclick="closeM('m-job')">ยกเลิก</button>
-      <button class="btn-ok" onclick="saveJob()">&#10003;&nbsp; บันทึก</button>
-    </div>
-  </div>
+<div id="credit">
+  <span style="color:#2b7de9;font-weight:800;font-size:13px;">⚙ Thanakrit Engineer Workshop</span>
+  &nbsp;·&nbsp; 10M CNC Lathe Scheduling &nbsp;·&nbsp; Firebase Realtime Sync &nbsp;·&nbsp; 2026
 </div>
 
-<!-- MODAL: CASCADE -->
-<div class="mov" id="m-casc">
-  <div class="mbox" style="width:500px">
-    <div class="mh"><span class="mh-t">&#9888; ยืนยันการเลื่อนเวลา</span>
-      <button class="mx" onclick="closeM('m-casc')">&#10005;</button></div>
-    <div class="mb">
-      <p style="font-size:14px;margin-bottom:10px">งาน <strong id="cj" style="color:var(--cyan)"></strong>
-        จะถูกเลื่อน <strong id="cd" style="color:var(--amber)"></strong> วัน</p>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">งานถัดไปที่จะถูกขยับตามอัตโนมัติ:</p>
-      <div class="cl" id="cl"></div>
-    </div>
-    <div class="mf">
-      <button class="btn-x" onclick="closeM('m-casc')">ยกเลิก</button>
-      <button class="btn-ok" style="background:var(--amber);color:var(--bg)" onclick="doCC()">ยืนยัน &amp; บันทึก</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: DELETE -->
-<div class="mov" id="m-del">
-  <div class="mbox" style="width:420px">
-    <div class="mh"><span class="mh-t">ลบงาน</span>
-      <button class="mx" onclick="closeM('m-del')">&#10005;</button></div>
-    <div class="mb">
-      <p style="font-size:14px">ลบงาน <strong id="dj" style="color:var(--red)"></strong> ใช่หรือไม่?</p>
-      <p style="font-size:12px;color:var(--text3);margin-top:6px">การดำเนินการนี้ไม่สามารถยกเลิกได้</p>
-    </div>
-    <div class="mf">
-      <button class="btn-x" onclick="closeM('m-del')">ยกเลิก</button>
-      <button class="btn-rm" onclick="doDelete()">ลบ</button>
-    </div>
-  </div>
-</div>
-
-<div class="tc" id="tc"></div>
+<div id="mr"></div>
 
 <script>
-// ─── AUTH ───────────────────────────────────────
-const ADMINS = { admin:'admin1234' };
-let role = 'viewer';
+/* ═══════════════════════════════════════════════════════
+   FIREBASE CONFIGURATION
+   path: lathe10m/ ในโปรเจกต์ fab-checklist-workshop
+   ⚠ ตั้ง Firebase Rules: .read/.write = true หรือ auth
+═══════════════════════════════════════════════════════ */
+const FB={apiKey:"AIzaSyAad7GNxjfz3nzPeFtBkhB16fO54QAKmOw",authDomain:"fab-checklist-workshop.firebaseapp.com",databaseURL:"https://fab-checklist-workshop-default-rtdb.firebaseio.com",projectId:"fab-checklist-workshop",storageBucket:"fab-checklist-workshop.firebasestorage.app",messagingSenderId:"80900940748",appId:"1:80900940748:web:0ab64b61d5bcc200fdf369"};
+firebase.initializeApp(FB);
+const db=firebase.database();
+const JR=db.ref('lathe10m/jobs');
+const SR=db.ref('lathe10m/settings');
 
-function openLogin(){
-  document.getElementById('login-ov').style.display='flex';
-  document.getElementById('lu').value='';
-  document.getElementById('lp').value='';
-  document.getElementById('lerr').style.display='none';
-}
-function closeLogin(){ document.getElementById('login-ov').style.display='none'; }
-function doLogin(){
-  const u=document.getElementById('lu').value.trim();
-  const p=document.getElementById('lp').value;
-  if(ADMINS[u]===p){ role='admin'; closeLogin(); applyRole(); toast('เข้าสู่ระบบสำเร็จ — Admin','ok'); }
-  else { document.getElementById('lerr').style.display='block'; }
-}
-function doLogout(){ role='viewer'; applyRole(); toast('ออกจากระบบแล้ว','inf'); }
-document.getElementById('lp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-document.getElementById('lu').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+/* ═══════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════ */
+const _a=atob('QWRtaW5ATGF0aGUyMDI2'); // Admin@Lathe2026
+const DEF_AREAS=["ช่างกลึงที่ 1","ช่างกลึงที่ 2","ช่างกลึงที่ 3","งานพิเศษ","งานซ่อมบำรุง","งานเร่งด่วน","ทั่วไป"];
+const STS=[{v:"pending",lb:"รอดำเนินการ",c:"#94a3b8"},{v:"in-progress",lb:"กำลังดำเนินการ",c:"#fbbf24"},{v:"completed",lb:"เสร็จสิ้น",c:"#34d399"},{v:"delayed",lb:"ล่าช้า",c:"#f87171"}];
+const MTs=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const MTl=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const DT=["อา","จ","อ","พ","พฤ","ศ","ส"];
+let role='viewer',jobs=[],areas=[...DEF_AREAS],curTab='gantt';
+let _pc=null,_efk=null,_eos=null,_dfk=null,_aei=null;
+let tQ='',tA='',tS='';
 
-function applyRole(){
-  const a=role==='admin';
-  document.getElementById('btn-add').style.display=a?'flex':'none';
-  document.getElementById('btn-alog').style.display=a?'none':'flex';
-  document.getElementById('btn-lout').style.display=a?'flex':'none';
-  document.getElementById('btn-rst').style.display=a?'flex':'none';
-  document.getElementById('tb-badge').innerHTML=a?'<div class="tb-badge adm">&#9650; ADMIN</div>':'';
-  render();
-}
-
-// ─── DATE HELPERS ───────────────────────────────
-const SS=new Date(2026,4,10), SE=new Date(2026,11,31);
-const TODAY=fmt(new Date());
-const MTH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-const DOW=['อา','จ','อ','พ','พฤ','ศ','ส'];
-
-function fmt(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
-function pad(n){ return String(n).padStart(2,'0'); }
-function parse(s){ const[y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
-function addD(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
-function diffD(a,b){ return Math.round((b-a)/86400000); }
-
-function holiday(d){
-  const dow=d.getDay();
-  if(dow===0) return 'sun';
-  if(dow===6){
-    const ds=fmt(d);
-    if(ds==='2026-05-30'||ds==='2026-06-06') return 'sat';
-    const yr=d.getFullYear(), mo=d.getMonth();
-    let cnt=0;
-    for(let i=1;i<=d.getDate();i++) if(new Date(yr,mo,i).getDay()===6) cnt++;
-    return cnt%2===1 ? 'sat' : null;
+/* ═══════════════════════════════════════════════════════
+   WORKING DAY ENGINE
+   กฎ: อาทิตย์หยุดทุกสัปดาห์ / เสาร์เว้นเสาร์ (สลับ ทำ-หยุด)
+   ข้อยกเว้น: 16/5(หยุด,เริ่มรอบ), 30/5 และ 6/6 หยุดติดกัน 2 สัปดาห์
+   ตั้งแต่ 20/6 เป็นต้นไป รูปแบบเสาร์เว้นเสาร์เป็นไปตามคาบ 14 วันปกติ
+═══════════════════════════════════════════════════════ */
+const SAT_OFF_FIXED=new Set(["2026-05-16","2026-05-30","2026-06-06"]);
+const SAT_OFF_REF=new Date("2026-06-20T00:00:00");
+function dk(d){const t=new Date(d);return`${t.getFullYear()}-${("0"+(t.getMonth()+1)).slice(-2)}-${("0"+t.getDate()).slice(-2)}`;}
+function isWD(date){
+  const d=new Date(date);d.setHours(0,0,0,0);
+  const w=d.getDay();
+  if(w===0)return false; // อาทิตย์ หยุดทุกสัปดาห์
+  if(w===6){ // เสาร์
+    if(SAT_OFF_FIXED.has(dk(d)))return false; // 16/5, 30/5, 6/6 = หยุด
+    const diff=Math.round((d-SAT_OFF_REF)/86400000);
+    if(diff<0)return true; // 23/5 เสาร์ทำงานก่อนเข้ารอบปกติ
+    return diff%14!==0; // ตั้งแต่ 20/6 เป็นต้นไป: ทุก 14 วันคือเสาร์หยุด (เสาร์เว้นเสาร์)
   }
-  return null;
+  return true; // จันทร์-ศุกร์ ทำงานปกติ
 }
+function cWDs(s,e){let d=new Date(s);d.setHours(0,0,0,0);const en=new Date(e);en.setHours(0,0,0,0);let c=0;while(d<=en){if(isWD(d))c++;d.setDate(d.getDate()+1);}return c;}
+function aD(ds,n){const d=new Date(ds);d.setDate(d.getDate()+n);return dk(d);}
+function dD(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
+const fD=s=>{if(!s)return"—";const d=new Date(s);return`${d.getDate()} ${MTs[d.getMonth()]} ${d.getFullYear()}`;};
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-function genDates(){
-  const out=[]; let d=new Date(SS);
-  while(d<=SE){ out.push(new Date(d)); d=addD(d,1); }
-  return out;
-}
-const DATES=genDates();
+/* ═══════════════════════════════════════════════════════
+   FIREBASE LISTENERS
+═══════════════════════════════════════════════════════ */
+function setFbSt(s){const e=document.getElementById('fbst');if(!e)return;e.className=s;if(s==='ok'){e.textContent='● Firebase เชื่อมต่อแล้ว';setTimeout(()=>{e.style.opacity='0';},4000);}else if(s==='err'){e.textContent='✕ Firebase ขาดการเชื่อมต่อ';e.style.opacity='1';}else{e.textContent='⟳ กำลังเชื่อมต่อ...';e.style.opacity='1';}}
 
-// ─── DATA ───────────────────────────────────────
-// BUG FIX: Use a simple counter-based ID that never reuses deleted IDs
-let _nextId = 12;
-function newId(){ return _nextId++; }
-
-let jobs=[
-  {id:1, name:'ซ่อมเพลา Size press leadin ตำแหน่งรองเชื่อก',
-    area:'Size Press',owner:'nattanon / 6229',status:'done',prio:'high',
-    start:'2026-05-10',end:'2026-05-16',proc:'เบิ้มเดิมเนื้อ / กลึงร่วมศูนย์',note:''},
-  {id:2, name:'แก้ไขเพลา roller NO 24 ETP2 No.1',
-    area:'ETP2',owner:'',status:'done',prio:'normal',
-    start:'2026-05-12',end:'2026-05-20',proc:'เบิ้มเดิมเนื้อ / กลึงร่วมศูนย์',note:''},
-  {id:3, name:'แก้ไขเพลา roller NO 24 ETP2 No.2',
-    area:'ETP2',owner:'',status:'done',prio:'normal',
-    start:'2026-05-19',end:'2026-05-25',proc:'เบิ้มเดิมเนื้อ / กลึงร่วมศูนย์',note:''},
-  {id:4, name:'กลึงเพลา screw conveyor 322C001',
-    area:'Conveyor',owner:'saovapol / 2981',status:'done',prio:'high',
-    start:'2026-05-15',end:'2026-05-22',proc:'กลึงร่วมศูนย์/หัว-ท้าย ไสรอง/ลิ้ม',note:'final 20/05'},
-  {id:5, name:'Screw chip c001',
-    area:'Chip',owner:'',status:'pending',prio:'normal',
-    start:'2026-05-25',end:'2026-06-05',proc:'',note:''},
-  {id:6, name:'screw 321C004',
-    area:'Screw',owner:'',status:'pending',prio:'normal',
-    start:'2026-06-05',end:'2026-06-18',proc:'',note:''},
-  {id:7, name:'Screw Reclaimer',
-    area:'Reclaimer',owner:'saovapol / 2981',status:'inprog',prio:'normal',
-    start:'2026-06-09',end:'2026-06-25',proc:'',note:''},
-  {id:8, name:'Screw Press',
-    area:'Press',owner:'',status:'pending',prio:'normal',
-    start:'2026-06-22',end:'2026-07-05',proc:'',note:''},
-  {id:9, name:'Stocker Screw',
-    area:'Stocker',owner:'',status:'pending',prio:'normal',
-    start:'2026-07-01',end:'2026-07-20',proc:'',note:''},
-  {id:10,name:'REPAIR DISTRIBUTION SCREW',
-    area:'Distribution',owner:'',status:'pending',prio:'high',
-    start:'2026-07-15',end:'2026-08-05',proc:'',note:''},
-  {id:11,name:'Overhaul Main Shaft Shredder',
-    area:'Shredder',owner:'',status:'pending',prio:'high',
-    start:'2026-08-03',end:'2026-08-28',proc:'',note:''},
-];
-
-// ─── STORAGE ────────────────────────────────────
-const STORE_KEY   = 'lathe10m_jobs_v2';
-const STORE_IDKEY = 'lathe10m_nextid_v2';
-
-// Default dataset — used only when localStorage has NO saved data
-const DEFAULT_JOBS = JSON.parse(JSON.stringify(jobs));
-const DEFAULT_NEXTID = 12;
-
-function saveToStorage(){
-  try{
-    localStorage.setItem(STORE_KEY,   JSON.stringify(jobs));
-    localStorage.setItem(STORE_IDKEY, String(_nextId));
-    showSaveIndicator();
-  } catch(e){ toast('ไม่สามารถบันทึกข้อมูลได้: '+e.message,'err'); }
-}
-
-function loadFromStorage(){
-  try{
-    const raw = localStorage.getItem(STORE_KEY);
-    const nid = localStorage.getItem(STORE_IDKEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      if(Array.isArray(parsed) && parsed.length > 0){
-        jobs = parsed;
-        _nextId = nid ? parseInt(nid) : Math.max(...parsed.map(j=>j.id)) + 1;
-        return true; // loaded from storage
-      }
-    }
-  } catch(e){ console.warn('Storage load error:',e); }
-  return false; // use default
-}
-
-function resetToDefault(){
-  if(!confirm('รีเซ็ตข้อมูลทั้งหมดกลับเป็นค่าเริ่มต้น? การดำเนินการนี้ไม่สามารถยกเลิกได้')) return;
-  localStorage.removeItem(STORE_KEY);
-  localStorage.removeItem(STORE_IDKEY);
-  jobs = JSON.parse(JSON.stringify(DEFAULT_JOBS));
-  _nextId = DEFAULT_NEXTID;
-  updateArea(); updateStats(); render();
-  toast('รีเซ็ตข้อมูลเรียบร้อยแล้ว','inf');
-}
-
-function showSaveIndicator(){
-  const el = document.getElementById('save-ind');
-  if(!el) return;
-  el.style.opacity='1';
-  el.textContent = '✓ บันทึกแล้ว';
-  clearTimeout(el._t);
-  el._t = setTimeout(()=>{ el.style.opacity='0'; }, 2500);
-}
-
-// ─── SORT ───────────────────────────────────────
-function sortedJobs(){ return [...jobs].sort((a,b)=>a.start.localeCompare(b.start)); }
-
-let pendCC=null, pendDel=null;
-
-// ─── STATS ──────────────────────────────────────
-function updateStats(){
-  const t=jobs.length, dn=jobs.filter(j=>j.status==='done').length;
-  const ip=jobs.filter(j=>j.status==='inprog').length;
-  const pe=jobs.filter(j=>j.status==='pending'||j.status==='hold').length;
-  document.getElementById('stats').innerHTML=`
-    <div class="scard sc1"><div class="sc-lbl">งานทั้งหมด</div><div class="sc-val">${t}</div><div class="sc-sub">Total Jobs</div></div>
-    <div class="scard sc2"><div class="sc-lbl">เสร็จแล้ว</div><div class="sc-val">${dn}</div><div class="sc-sub">Completed</div></div>
-    <div class="scard sc3"><div class="sc-lbl">ดำเนินการ</div><div class="sc-val">${ip}</div><div class="sc-sub">In Progress</div></div>
-    <div class="scard sc4"><div class="sc-lbl">รอดำเนินการ</div><div class="sc-val">${pe}</div><div class="sc-sub">Pending</div></div>`;
-}
-
-// ─── AREA FILTER ────────────────────────────────
-function updateArea(){
-  const sel=document.getElementById('qa');
-  const areas=[...new Set(jobs.map(j=>j.area).filter(Boolean))].sort();
-  const cur=sel.value;
-  sel.innerHTML='<option value="">พื้นที่ทั้งหมด</option>'+areas.map(a=>`<option value="${a}">${a}</option>`).join('');
-  if(areas.includes(cur)) sel.value=cur;
-}
-
-// ─── RENDER TABLE ───────────────────────────────
-function render(){
-  const q=document.getElementById('qs').value.toLowerCase();
-  const fs=document.getElementById('qst').value;
-  const fa=document.getElementById('qa').value;
-  const isAdmin=role==='admin';
-
-  // BUG FIX: Sort by start date first, then filter
-  const sorted=sortedJobs();
-  const filtered=sorted.filter(j=>{
-    const txt=(j.name+j.owner+j.area+j.note).toLowerCase();
-    return txt.includes(q) && (!fs||j.status===fs) && (!fa||j.area===fa);
-  });
-
-  // Month groups
-  const months=[]; let cm=-1,cc=0;
-  DATES.forEach(d=>{
-    const mo=d.getMonth();
-    if(mo!==cm){ if(cc>0)months[months.length-1].s=cc; months.push({l:MTH[mo]+' '+d.getFullYear(),s:0}); cm=mo; cc=1; }
-    else cc++;
-  });
-  if(months.length) months[months.length-1].s=cc;
-
-  // Header
-  const fhd=`
-    <th class="c0" rowspan="3">ลำดับ</th>
-    <th class="c1" rowspan="3">ชื่องาน / รายละเอียด</th>
-    <th class="c2" rowspan="3">พื้นที่</th>
-    <th class="c3" rowspan="3">เจ้าของงาน</th>
-    <th class="c4" rowspan="3">สถานะ</th>
-    <th class="c5" rowspan="3">กระบวนการ</th>
-    <th class="c6" rowspan="3">หมายเหตุ</th>`;
-  const mhd=months.map(m=>`<th colspan="${m.s}" class="mth">${m.l}</th>`).join('');
-  const dhd=DATES.map(d=>{
-    const ds=fmt(d), hol=holiday(d), isT=(ds===TODAY);
-    const bg=hol?'#06090F':'var(--bg2)';
-    return `<th class="dc" style="background:${bg}">
-      <div class="dw">
-        <span class="dn${isT?' tod':''}${hol?' hol':''}">${d.getDate()}</span>
-        <span class="dd${isT?' tod':''}${hol?' hol':''}">${DOW[d.getDay()]}</span>
-      </div></th>`;
-  }).join('');
-
-  document.getElementById('gh').innerHTML=
-    `<tr class="hr1">${fhd}${mhd}</tr><tr class="hr-m">${mhd}</tr><tr class="hr-d">${dhd}</tr>`;
-  // Fix: only 2 rows needed for header
-  document.getElementById('gh').innerHTML=
-    `<tr class="hr1">${fhd}${mhd}</tr><tr class="hr-d">${dhd}</tr>`;
-
-  const SM={
-    done: {c:'sb-dn',l:'&#10003; เสร็จแล้ว'},
-    inprog:{c:'sb-ip',l:'&#9654; ดำเนินการ'},
-    pending:{c:'sb-pd',l:'&#9711; รอดำเนินการ'},
-    hold: {c:'sb-hd',l:'&#9888; รอ/ระงับ'},
-  };
-  const BC={done:'c-done',inprog:'c-wip',pending:'c-plan',hold:'c-hold'};
-
-  const tbody=document.getElementById('gb');
-  tbody.innerHTML='';
-
-  filtered.forEach((job,rowIdx)=>{
-    const tr=document.createElement('tr');
-    const sm=SM[job.status]||SM.pending;
-    const bc=BC[job.status]||BC.pending;
-    const jS=parse(job.start), jE=parse(job.end);
-    // Count working days
-    const wdays=DATES.filter(d=>!holiday(d)&&d>=jS&&d<=jE).length;
-    const pbcls=job.prio==='high'?'pb-h':job.prio==='low'?'pb-l':'pb-n';
-
-    const adminBtns=isAdmin?`<div class="abr">
-      <button class="ab ab-e" onclick="openEdit(${job.id})">&#9998; แก้ไข</button>
-      <button class="ab ab-d" onclick="openDel(${job.id})">&#10005; ลบ</button>
-    </div>`:'';
-
-    // Display row number = 1-based index in sorted+filtered list
-    tr.innerHTML=`
-      <td class="tc0">
-        <span class="pb ${pbcls}"></span>
-        <span style="font-family:var(--fm);font-size:13px;font-weight:700;color:var(--text3)">${rowIdx+1}</span>
-      </td>
-      <td class="tc1">
-        <div class="jname">${job.name}</div>
-        <div class="jinfo">&#128197; ${job.start} &rarr; ${job.end}&nbsp; &#9679;&nbsp;${wdays} วันทำงาน</div>
-        ${adminBtns}
-      </td>
-      <td class="tc2"><span class="ap">${job.area||'—'}</span></td>
-      <td class="tc3">${job.owner||'—'}</td>
-      <td class="tc4"><span class="sb ${sm.c}">${sm.l}</span></td>
-      <td class="tc5">${job.proc||'—'}</td>
-      <td class="tc6">${job.note||'—'}</td>`;
-
-    // BUG FIX: Pre-compute which date indices are in range for this job
-    // Also compute first/last bar index for rounded corners
-    const inRangeArr=DATES.map(d=>!holiday(d)&&d>=jS&&d<=jE);
-    const firstBar=inRangeArr.indexOf(true);
-    const lastBar=inRangeArr.lastIndexOf(true);
-
-    DATES.forEach((d,di)=>{
-      const td=document.createElement('td');
-      td.className='tcd dc';
-      const ds=fmt(d), hol=holiday(d), isT=(ds===TODAY);
-      const inR=inRangeArr[di];
-
-      if(hol==='sun'){ td.classList.add('c-sun'); }
-      else if(hol==='sat'){ td.classList.add('c-sat'); }
-      else if(inR){
-        td.classList.add(bc,'bar-plan');
-        // Rounded corners on bar start/end
-        if(di===firstBar&&di===lastBar) td.classList.add('bar-solo');
-        else if(di===firstBar) td.classList.add('bar-start');
-        else if(di===lastBar) td.classList.add('bar-end');
-        if(isT) td.classList.add('c-tod-mark');
-      } else {
-        if(isT) td.classList.add('c-tod-empty');
-      }
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-}
-
-// ─── SCROLL TO TODAY ────────────────────────────
-function scrollToToday(){
-  const sc=document.getElementById('ss');
-  const idx=DATES.findIndex(d=>fmt(d)===TODAY);
-  if(idx<0) return;
-  const fw=52+240+108+140+106+175+155;
-  const cw=28;
-  sc.scrollLeft=Math.max(0,fw+idx*cw-sc.clientWidth/2);
-}
-
-// ─── MODAL: ADD/EDIT ────────────────────────────
-function openAdd(){
-  document.getElementById('m-job-t').textContent='เพิ่มงานใหม่';
-  document.getElementById('f-id').value='';
-  ['f-name','f-area','f-owner','f-proc','f-note'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-start').value=fmt(new Date());
-  document.getElementById('f-end').value=fmt(addD(new Date(),7));
-  document.getElementById('f-st').value='pending';
-  document.getElementById('f-pr').value='normal';
-  document.getElementById('cn').style.display='none';
-  openM('m-job');
-}
-
-function openEdit(id){
-  const j=jobs.find(x=>x.id===id); if(!j) return;
-  document.getElementById('m-job-t').textContent='แก้ไขงาน — '+j.name;
-  document.getElementById('f-id').value=id;
-  document.getElementById('f-name').value=j.name;
-  document.getElementById('f-area').value=j.area;
-  document.getElementById('f-owner').value=j.owner;
-  document.getElementById('f-start').value=j.start;
-  document.getElementById('f-end').value=j.end;
-  document.getElementById('f-st').value=j.status;
-  document.getElementById('f-pr').value=j.prio;
-  document.getElementById('f-proc').value=j.proc;
-  document.getElementById('f-note').value=j.note;
-  document.getElementById('cn').style.display='flex';
-  openM('m-job');
-}
-
-function saveJob(){
-  const name =document.getElementById('f-name').value.trim();
-  const area =document.getElementById('f-area').value.trim();
-  const owner=document.getElementById('f-owner').value.trim();
-  const start=document.getElementById('f-start').value;
-  const end  =document.getElementById('f-end').value;
-  const status=document.getElementById('f-st').value;
-  const prio =document.getElementById('f-pr').value;
-  const proc =document.getElementById('f-proc').value.trim();
-  const note =document.getElementById('f-note').value.trim();
-  const eid  =document.getElementById('f-id').value;
-
-  if(!name||!start||!end){ toast('กรุณากรอกข้อมูลที่จำเป็น','err'); return; }
-  if(start>end){ toast('วันเริ่มต้องไม่เกินวันสิ้นสุด','err'); return; }
-
-  if(eid){
-    const idx=jobs.findIndex(j=>j.id===parseInt(eid));
-    if(idx<0){ toast('ไม่พบข้อมูลงาน','err'); return; }
-    const oldJ=jobs[idx];
-    const diff=diffD(parse(oldJ.start),parse(start));
-
-    if(diff!==0){
-      // BUG FIX: Only cascade jobs that start AFTER old start (not same or before)
-      const after=jobs.filter(j=>j.id!==oldJ.id && parse(j.start)>parse(oldJ.start));
-      if(after.length>0){
-        pendCC={eid:parseInt(eid),nd:{name,area,owner,start,end,status,prio,proc,note},diff,after};
-        document.getElementById('cj').textContent=name;
-        document.getElementById('cd').textContent=(diff>0?'+':'')+diff;
-        document.getElementById('cl').innerHTML=after.map(j=>
-          `<div class="ci"><span>${j.name}</span><span class="ci-s">${diff>0?'+':''}${diff} วัน</span></div>`
-        ).join('');
-        closeM('m-job'); openM('m-casc'); return;
-      }
-    }
-    // BUG FIX: Direct update — properly assign all fields
-    jobs[idx]={...jobs[idx], name,area,owner,start,end,status,prio,proc,note};
-  } else {
-    // BUG FIX: Use newId() so IDs never collide with deleted ones
-    jobs.push({id:newId(),name,area,owner,start,end,status,prio,proc,note});
-  }
-  closeM('m-job'); updateArea(); updateStats(); render(); saveToStorage();
-  toast(eid?'อัปเดตเรียบร้อย ✓':'เพิ่มงานใหม่เรียบร้อย ✓','ok');
-}
-
-function doCC(){
-  if(!pendCC) return;
-  const{eid,nd,diff,after}=pendCC;
-  const idx=jobs.findIndex(j=>j.id===eid);
-  // BUG FIX: Proper update with spread
-  jobs[idx]={...jobs[idx],...nd};
-  after.forEach(aj=>{
-    const i=jobs.findIndex(j=>j.id===aj.id);
-    if(i<0) return;
-    jobs[i]={...jobs[i],
-      start:fmt(addD(parse(jobs[i].start),diff)),
-      end:  fmt(addD(parse(jobs[i].end),diff))};
-  });
-  pendCC=null; closeM('m-casc'); updateArea(); updateStats(); render(); saveToStorage();
-  toast('บันทึกและขยับงานทั้งหมดเรียบร้อย ✓','ok');
-}
-
-// ─── DELETE ─────────────────────────────────────
-function openDel(id){
-  const j=jobs.find(x=>x.id===id); if(!j) return;
-  pendDel=id;
-  document.getElementById('dj').textContent=j.name;
-  openM('m-del');
-}
-function doDelete(){
-  // BUG FIX: _nextId stays the same — deleted IDs are never reused
-  jobs=jobs.filter(j=>j.id!==pendDel);
-  pendDel=null; closeM('m-del'); updateArea(); updateStats(); render(); saveToStorage();
-  toast('ลบงานเรียบร้อย','inf');
-}
-
-// ─── MODAL HELPERS ──────────────────────────────
-function openM(id){ document.getElementById(id).classList.add('open'); }
-function closeM(id){ document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.mov').forEach(m=>{
-  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
-});
-
-// ─── TOAST ──────────────────────────────────────
-function toast(msg,type='inf'){
-  const c=document.getElementById('tc');
-  const t=document.createElement('div');
-  t.className='toast '+type;
-  const col={ok:'var(--green)',err:'var(--red)',inf:'var(--cyan)'};
-  const ico={ok:'&#10003;',err:'&#10007;',inf:'&#9670;'};
-  t.innerHTML=`<span style="color:${col[type]};font-size:15px">${ico[type]}</span> ${msg}`;
-  c.appendChild(t);
-  setTimeout(()=>{ t.style.transition='opacity .3s'; t.style.opacity='0';
-    setTimeout(()=>t.remove(),320); },3200);
-}
-
-// ─── INIT ────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
-  const hadSaved = loadFromStorage(); // load saved data FIRST
-  updateArea(); updateStats(); render();
-  setTimeout(scrollToToday,350);
-  if(hadSaved){
-    // Show subtle indicator that data was loaded from storage
-    setTimeout(()=> toast('โหลดข้อมูลล่าสุดเรียบร้อย','inf'), 600);
-  }
+  updDate();renderBadge();renderHActs();renderTActs();
+  setInterval(updDate,60000);
+
+  // Settings listener — areas (realtime: admin เพิ่ม/แก้/ลบ Area → ทุกคนเห็นทันที)
+  SR.on('value',(snap)=>{
+    const d=snap.val();
+    if(d&&d.areas){areas=Array.isArray(d.areas)?d.areas:Object.values(d.areas);}
+    else{SR.set({areas:DEF_AREAS});areas=[...DEF_AREAS];}
+    // ถ้า modal จัดการ Area เปิดอยู่ ให้รีเฟรชรายการทันที
+    if(document.getElementById('newarea')){_aei=null;renderAreas();}
+    // รีเฟรชตารางถ้าอยู่ที่แท็บตาราง (เผื่อ dropdown พื้นที่เปลี่ยน)
+    if(curTab==='table')renderTable();
+  },(err)=>{console.error('Settings listener error:',err);});
+
+  // Jobs: seed ข้อมูลตัวอย่างครั้งแรกถ้ายังไม่มีข้อมูลเลย แล้วเริ่ม realtime listener
+  JR.once('value').then(snap=>{
+    if(!snap.exists()){
+      const updates={};
+      INIT.forEach(j=>{const key=JR.push().key;updates[key]={...j,createdAt:Date.now()};});
+      return JR.update(updates);
+    }
+  }).catch(e=>console.error('Seed check failed:',e)).finally(()=>{
+    // Jobs listener — realtime: admin แก้ → ทุกคนเห็นทันที (ไม่ต้องรีเฟรชหน้า)
+    JR.on('value',(snap)=>{
+      const d=snap.val();
+      jobs=d?Object.entries(d).map(([k,j])=>({...j,fk:k})).sort((a,b)=>a.start.localeCompare(b.start)):[];
+      setFbSt('ok');
+      renderAll();
+      const now=new Date(),si=document.getElementById('hsync');
+      if(si)si.textContent='sync '+now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    },(err)=>{
+      setFbSt('err');
+      console.error('Jobs listener error:',err);
+      const el=document.getElementById('tc-gantt');
+      if(el&&!jobs.length)el.innerHTML='<div style="text-align:center;color:#f87171;padding:60px;"><div style="font-size:48px;margin-bottom:12px;">⚠</div>'
+        +'<div style="font-weight:700;margin-bottom:8px;">ไม่สามารถเชื่อมต่อฐานข้อมูลได้ (Permission Denied)</div>'
+        +'<div style="color:#6e8fa8;font-size:12px;max-width:480px;margin:0 auto;line-height:1.8;">กรุณาตรวจสอบ Firebase Realtime Database Rules ให้อนุญาต .read และ .write<br>(Firebase Console → Realtime Database → Rules)</div></div>';
+    });
+  });
+
+  // Connection state indicator
+  db.ref('.info/connected').on('value',(snap)=>{
+    if(snap.val())setFbSt('ok');else setFbSt('err');
+  });
 });
+
+function updDate(){const now=new Date(),e=document.getElementById('hdate');if(e)e.textContent=`${now.getDate()} ${MTs[now.getMonth()]} ${now.getFullYear()}`;}
+
+/* ═══════════════════════════════════════════════════════
+   AUTH
+═══════════════════════════════════════════════════════ */
+function openLogin(){
+  document.getElementById('mr').innerHTML=`
+  <div class="mover" onclick="if(event.target===this)closeM()">
+    <div class="albox">
+      <div class="altop"></div>
+      <div style="text-align:center;margin-bottom:28px;">
+        <div style="width:64px;height:64px;background:var(--grd);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;box-shadow:0 0 30px rgba(26,92,180,.3);">🔐</div>
+        <div style="color:#2b7de9;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800;margin-bottom:8px;">ADMIN ACCESS</div>
+        <h2 style="color:#c5d8ea;font-size:18px;font-weight:900;">เข้าสู่ระบบแอดมิน</h2>
+        <p style="color:#324d66;font-size:11px;margin-top:6px;">สำหรับผู้ดูแลระบบเท่านั้น</p>
+      </div>
+      <div style="height:1px;background:linear-gradient(90deg,transparent,#172a40,transparent);margin-bottom:22px;"></div>
+      <div style="margin-bottom:16px;">
+        <label style="color:#6e8fa8;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px;">🔑 รหัสผ่าน</label>
+        <input type="password" id="apw" placeholder="กรอกรหัสผ่าน..." autocomplete="off"
+          style="width:100%;padding:12px 16px;background:#060e1a;border:1px solid #172a40;border-radius:8px;color:#c5d8ea;font-size:14px;outline:none;letter-spacing:1.5px;box-sizing:border-box;"/>
+        <div id="aerr" style="color:#f87171;font-size:12px;margin-top:7px;display:none;">⚠ รหัสผ่านไม่ถูกต้อง</div>
+      </div>
+      <button onclick="doLogin()" style="width:100%;padding:13px;background:var(--grd);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:1.5px;text-transform:uppercase;font-family:inherit;">เข้าสู่ระบบ</button>
+      <button onclick="closeM()" style="width:100%;padding:10px;margin-top:10px;background:transparent;border:1px solid #172a40;border-radius:8px;color:#324d66;font-size:12px;cursor:pointer;font-family:inherit;">ยกเลิก</button>
+      <div style="margin-top:18px;padding:12px 16px;background:#040a14;border-radius:8px;border:1px solid #0a1624;font-size:11px;color:#1a2d42;font-family:monospace;line-height:1.9;">
+        <span style="color:#fbbf24;font-weight:700;">Admin </span>: Admin@Lathe2026<br>
+        <span style="color:#34d399;font-weight:700;">Viewer</span>: เปิดลิงก์ดูได้เลย (ไม่ต้องล็อกอิน)
+      </div>
+    </div>
+  </div>`;
+  const pw=document.getElementById('apw');
+  if(pw){pw.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});setTimeout(()=>pw.focus(),50);}
+}
+
+function doLogin(){
+  const pw=document.getElementById('apw')?.value;
+  if(pw===_a){role='admin';closeM();renderBadge();renderHActs();renderTActs();renderAll();}
+  else{const e=document.getElementById('aerr');if(e){e.style.display='block';document.getElementById('apw').value='';}}
+}
+
+function doLogout(){role='viewer';renderBadge();renderHActs();renderTActs();renderAll();}
+
+function renderBadge(){
+  const e=document.getElementById('hbadge');if(!e)return;
+  e.innerHTML=role==='admin'?'<div class="rbadge admin">👑 ADMIN</div>':'<div class="rbadge viewer">👁 VIEWER</div>';
+}
+function renderHActs(){
+  const e=document.getElementById('hacts');if(!e)return;
+  e.innerHTML=role==='admin'
+    ?'<button onclick="doLogout()" class="btn-2" style="padding:7px 14px;font-size:12px;">ออกจากระบบ</button>'
+    :'<button onclick="openLogin()" class="btn-alog">🔐 Admin Login</button>';
+}
+function renderTActs(){
+  const e=document.getElementById('tacts');if(!e)return;
+  if(role==='admin'){
+    e.innerHTML=`
+      <button class="btn-print" onclick="printGantt()">🖨️ พิมพ์ Gantt</button>
+      <button class="btn-areas" onclick="openAreas()">📍 จัดการ Area</button>
+      <button class="btn-add" onclick="openJob(null)">➕ เพิ่มงานใหม่</button>
+      <button class="btn-reset" onclick="resetData()" title="รีเซ็ตข้อมูล">🔄</button>`;
+  }else{e.innerHTML='';}
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════════ */
+function renderAll(){renderStats();renderCur();}
+function renderCur(){if(curTab==='gantt')renderGantt();else if(curTab==='table')renderTable();else renderSummary();}
+function swTab(t,btn){
+  curTab=t;document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');
+  ['gantt','table','summary'].forEach(id=>{const e=document.getElementById('tc-'+id);if(e)e.style.display=id===t?'':'none';});
+  renderCur();
+}
+
+/* STATS */
+function renderStats(){
+  const tot=jobs.length,done=jobs.filter(j=>j.status==='completed').length;
+  const act=jobs.filter(j=>j.status==='in-progress').length,pend=jobs.filter(j=>j.status==='pending').length;
+  const del=jobs.filter(j=>j.status==='delayed').length,wds=jobs.reduce((a,j)=>a+cWDs(j.start,j.end),0);
+  const el=document.getElementById('sbar');if(!el)return;
+  el.innerHTML=[
+    {i:'📋',lb:'งานทั้งหมด',v:tot,c:'#5ba4f5'},{i:'⚙',lb:'กำลังดำเนินการ',v:act,c:'#fbbf24'},
+    {i:'✅',lb:'เสร็จสิ้น',v:done,c:'#34d399'},{i:'⏳',lb:'รอดำเนินการ',v:pend,c:'#94a3b8'},
+    {i:'⚠',lb:'ล่าช้า',v:del,c:'#f87171'},{i:'🗓',lb:'วันทำงานรวม',v:wds,c:'#c084fc',u:'วัน'},
+  ].map(c=>`<div class="scard" style="border-top:2px solid ${c.c}38;">
+    <div class="slbl">${c.i} ${c.lb}</div>
+    <div class="snum" style="color:${c.c};">${c.v}${c.u?`<span style="font-size:12px;color:var(--mut);margin-left:4px;">${c.u}</span>`:''}</div>
+  </div>`).join('');
+}
+
+/* GANTT */
+const CW=36,RH=54,LW=300;
+function renderGantt(printMode=false){
+  const el=document.getElementById('tc-gantt');if(!el)return;
+  if(!jobs.length){el.innerHTML='<div style="text-align:center;color:var(--mut);padding:60px;"><div style="font-size:48px;margin-bottom:12px;">📅</div>ยังไม่มีข้อมูลงาน</div>';return;}
+  const today=dk(new Date());
+  const ms=jobs.reduce((m,j)=>j.start<m?j.start:m,jobs[0].start);
+  const me=jobs.reduce((m,j)=>j.end>m?j.end:m,jobs[0].end);
+
+  // print mode: ตัด padding ส่วนเกิน + ลดขนาดคอลัมน์ + ปิด sticky (sticky พิมพ์แล้วเลื่อนเพี้ยน)
+  const CWx=printMode?18:CW, RHx=printMode?36:RH, LWx=printMode?170:LW;
+  const padS=printMode?1:3, padE=printMode?1:14;
+  const stH=printMode?'':'position:sticky;top:0;z-index:20;';
+  const stL=printMode?'':'position:sticky;left:0;z-index:21;';
+  const stR=printMode?'':'position:sticky;left:0;z-index:10;';
+  const rpad=printMode?10:16;
+
+  const days=[],idxMap={},months=[];
+  let c=new Date(aD(ms,-padS));const en=new Date(aD(me,padE));
+  while(c<=en){days.push(dk(c));c.setDate(c.getDate()+1);}
+  days.forEach((s,i)=>idxMap[s]=i);
+  days.forEach(ds=>{
+    const dt=new Date(ds),k=`${dt.getFullYear()}-${dt.getMonth()}`;
+    const l=months[months.length-1];
+    if(!l||l.k!==k)months.push({k,lb:`${MTl[dt.getMonth()]} ${dt.getFullYear()}`,cnt:1});else l.cnt++;
+  });
+  const tdi=idxMap[today]??-1,totalW=LWx+days.length*CWx;
+  const mH=months.map(m=>`<div style="width:${m.cnt*CWx}px;flex-shrink:0;background:#050d1a;border-left:2px solid rgba(43,125,233,.14);display:flex;align-items:center;padding:0 8px;color:#6fc7eb;font-size:${printMode?11:13}px;font-weight:700;overflow:hidden;white-space:nowrap;">${m.lb}</div>`).join('');
+  const dH=days.map((ds,i)=>{
+    const d=new Date(ds),off=!isWD(d),itd=ds===today,mon=d.getDay()===1;
+    const bg=itd?'rgba(239,68,68,.25)':off?'rgba(0,0,0,.55)':'#050d1a';
+    const bl=mon?'2px solid #1e3a52':'1px solid #0a1624';
+    const nc=itd?'#ef4444':off?'#1a2d3d':mon?'#4a7090':'#2e4a5f';
+    const dc=itd?'#ef4444':off?'#0f1e2c':'#1c3040';
+    return`<div style="width:${CWx}px;flex-shrink:0;background:${bg};border-left:${bl};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+      <div style="color:${nc};font-size:${printMode?9:10}px;font-weight:${itd?900:mon?700:400};line-height:1;">${d.getDate()}</div>
+      <div style="color:${dc};font-size:${printMode?7:8}px;line-height:1;">${DT[d.getDay()]}</div>
+    </div>`;
+  }).join('');
+  const rowsH=jobs.map((j,ri)=>{
+    const st=STS.find(s=>s.v===j.status),si=idxMap[j.start],ei=idxMap[j.end];
+    const isAct=j.start<=today&&j.end>=today,wds=cWDs(j.start,j.end);
+    const rBg=isAct?'rgba(43,125,233,.05)':ri%2===0?'rgba(5,10,20,.7)':'transparent';
+    const lBg=isAct?'#05111e':ri%2===0?'#040d1a':'#07101e';
+    let barH='';
+    if(si!==undefined){
+      const bl=si*CWx+2,bw=((ei===undefined?days.length-1:ei)-si+1)*CWx-4,sc=st?.c||'#94a3b8';
+      const bpad=printMode?6:10,btop=printMode?5:8,bh=RHx-(printMode?10:16);
+      barH=`<div style="position:absolute;left:${bl}px;width:${bw}px;top:${btop}px;height:${bh}px;
+        background:linear-gradient(90deg,${sc}28,${sc}38);border:1.5px solid ${sc}55;
+        border-radius:6px;display:flex;align-items:center;padding-left:${bpad}px;overflow:hidden;z-index:2;">
+        ${bw>(printMode?42:80)?`<span style="color:${sc};font-size:${printMode?10:12}px;font-weight:800;white-space:nowrap;">${esc(j.partName)}</span>`:''}
+        ${(!printMode&&bw>260)?`<span style="color:${sc}80;font-size:10px;margin-left:10px;white-space:nowrap;">${fD(j.start)} – ${fD(j.end)}</span>`:''}
+      </div>`;
+    }
+    const bgC=days.map((ds,i)=>{
+      const d=new Date(ds),off=!isWD(d),mon=d.getDay()===1,itd=ds===today;
+      return`<div style="position:absolute;left:${i*CWx}px;top:0;width:${CWx}px;height:${RHx}px;background:${itd?'rgba(239,68,68,.05)':off?'rgba(0,0,0,.25)':'transparent'};${mon?'border-left:1px solid #0a1624':''}"></div>`;
+    }).join('');
+    const tLine=tdi!==-1?`<div style="position:absolute;left:${tdi*CWx+CWx/2}px;top:0;width:2px;height:${RHx}px;background:rgba(239,68,68,.55);z-index:3;pointer-events:none;"></div>`:'';
+    const admB=(role==='admin'&&!printMode)?`<div style="display:flex;gap:4px;flex-shrink:0;margin-left:6px;">
+      <button class="bico be" onclick="openJob('${j.fk}')" title="แก้ไข">✏</button>
+      <button class="bico bd" onclick="openDel('${j.fk}')" title="ลบ">🗑</button>
+    </div>`:'';
+    const pbi=printMode?'page-break-inside:avoid;':'';
+    return`<div style="display:flex;height:${RHx}px;border-bottom:1px solid #0a1624;background:${rBg};${pbi}">
+      <div style="width:${LWx}px;flex-shrink:0;${stR}background:${lBg};border-right:1px solid #172a40;padding:0 ${rpad}px;display:flex;align-items:center;gap:8px;">
+        <div style="width:4px;height:${RHx-20}px;background:${st?.c||'#324d66'};border-radius:2px;flex-shrink:0;"></div>
+        <div style="overflow:hidden;flex:1;">
+          <div style="color:#c5d8ea;font-size:${printMode?11:13}px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(j.partName)}</div>
+          <div style="color:#324d66;font-size:${printMode?9:10}px;white-space:nowrap;display:flex;gap:6px;margin-top:2px;overflow:hidden;">
+            <span style="color:#3a5a7a;">${esc(j.jobNo||'—')}</span>
+            <span style="color:#4a5b8a;">${esc(j.area)}</span>
+            <span style="color:#2a4060;">${wds}${printMode?'วัน':' วันทำงาน'}</span>
+          </div>
+        </div>
+        ${admB}
+      </div>
+      <div style="flex:1;position:relative;overflow:hidden;">${bgC}${barH}${tLine}</div>
+    </div>`;
+  }).join('');
+  const gT=tdi!==-1?`
+    <div style="position:absolute;left:${LWx+tdi*CWx+CWx/2}px;top:0;bottom:0;width:2px;background:rgba(239,68,68,.1);z-index:0;pointer-events:none;"></div>
+    <div style="position:absolute;left:${LWx+tdi*CWx+CWx/2-22}px;top:${printMode?52:72}px;background:#ef4444;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:3px;z-index:25;pointer-events:none;letter-spacing:.5px;">TODAY</div>`:'';
+
+  const head=`<div style="${stH}display:flex;">
+    <div style="width:${LWx}px;flex-shrink:0;${stL}background:#050d1a;border-right:1px solid #172a40;">
+      <div style="height:${printMode?28:34}px;padding:0 ${rpad}px;display:flex;align-items:center;border-bottom:1px solid #0a1624;">
+        <span style="color:#1e3a5a;font-size:${printMode?8:9}px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;">10M LATHE — GANTT CHART</span>
+      </div>
+      <div style="height:${printMode?26:32}px;padding:0 ${rpad}px;display:flex;align-items:center;border-bottom:2px solid #172a40;">
+        <span style="color:#152030;font-size:${printMode?9:10}px;">ชิ้นงาน / เลขงาน / พื้นที่</span>
+      </div>
+    </div>
+    <div style="flex:1;">
+      <div style="display:flex;height:${printMode?28:34}px;background:#050d1a;border-bottom:1px solid #0a1624;">${mH}</div>
+      <div style="display:flex;height:${printMode?26:32}px;background:#050d1a;border-bottom:2px solid #172a40;">${dH}</div>
+    </div>
+  </div>`;
+
+  if(printMode){
+    el.innerHTML=`<div id="gcon" style="overflow:visible;width:${totalW}px;position:relative;">${head}${rowsH}${gT}</div>`;
+    return;
+  }
+
+  const leg=`<div class="g-legend">
+    <span style="color:var(--sub);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-right:4px;">คำอธิบาย:</span>
+    ${STS.map(s=>`<div class="leg"><div class="legdot" style="background:${s.c};"></div>${s.lb}</div>`).join('')}
+    <div class="leg"><div class="legdot" style="background:rgba(239,68,68,.25);border:1px solid rgba(239,68,68,.4);"></div>วันนี้</div>
+    <div class="leg"><div class="legdot" style="background:rgba(0,0,0,.55);border:1px solid #172a40;"></div>วันหยุด</div>
+  </div>`;
+  const pb=role==='admin'?`<div class="pbanner">🖨️ กดปุ่ม <strong style="color:#34d399;">พิมพ์ Gantt</strong> ด้านบนขวาเพื่อพิมพ์ A4 แนวนอน — หากตารางกว้างเกิน 1 หน้า ให้เลือก "Fit to printable area" / "Scale: Shrink to fit" ในหน้าตั้งค่าพิมพ์</div>`:'';
+  el.innerHTML=pb+leg+`
+    <div id="gcon" style="overflow:auto;border:1px solid #172a40;border-radius:8px;">
+      <div style="min-width:${totalW}px;position:relative;">${head}${rowsH}${gT}</div>
+    </div>`;
+  if(tdi>0)setTimeout(()=>{const g=document.getElementById('gcon');if(g)g.scrollLeft=Math.max(0,tdi*CWx-280);},80);
+}
+
+/* TABLE */
+function renderTable(){
+  const el=document.getElementById('tc-table');if(!el)return;
+  const today=dk(new Date()),isAdm=role==='admin';
+  const vis=jobs.filter(j=>{
+    if(tA&&j.area!==tA)return false;if(tS&&j.status!==tS)return false;
+    if(tQ){const q=tQ.toLowerCase();return j.partName.toLowerCase().includes(q)||(j.jobNo||'').toLowerCase().includes(q)||(j.mat||'').toLowerCase().includes(q)||(j.area||'').toLowerCase().includes(q);}
+    return true;
+  });
+  const aO=areas.map(a=>`<option value="${esc(a)}"${a===tA?' selected':''}>${esc(a)}</option>`).join('');
+  const sO=STS.map(s=>`<option value="${s.v}"${s.v===tS?' selected':''}>${s.lb}</option>`).join('');
+  const rows=vis.map((j,vi)=>{
+    const pN=jobs.indexOf(j)+1,isAct=j.start<=today&&j.end>=today;
+    const wds=cWDs(j.start,j.end),st=STS.find(s=>s.v===j.status)||STS[0];
+    const rC=isAct?'ar':vi%2===0?'er':'';
+    const stC=isAdm
+      ?`<select class="ssel" style="color:${st.c};" onchange="chgSt('${j.fk}',this.value)">${STS.map(s=>`<option value="${s.v}"${s.v===j.status?' selected':''}>${s.lb}</option>`).join('')}</select>`
+      :`<span class="sbadge" style="background:${st.c}22;color:${st.c};border-color:${st.c}40;">${st.lb}</span>`;
+    const aA=isAdm?`<td><div style="display:flex;gap:4px;">
+      <button class="bico be" onclick="openJob('${j.fk}')" title="แก้ไข">✏</button>
+      <button class="bico bd" onclick="openDel('${j.fk}')" title="ลบ">🗑</button>
+    </div></td>`:'';
+    return`<tr class="${rC}">
+      <td style="color:#324d66;text-align:center;font-variant-numeric:tabular-nums;">${pN}${isAct?'<span style="margin-left:4px;color:#f59e0b;font-size:9px;">●</span>':''}</td>
+      <td style="font-family:monospace;color:#5ba4f5;font-size:12px;">${esc(j.jobNo||'—')}</td>
+      <td style="font-weight:700;color:#c5d8ea;">${esc(j.partName)}</td>
+      <td style="font-family:monospace;color:#6fc7eb;font-size:12px;">${esc(j.drawNo||'—')}</td>
+      <td style="font-family:monospace;font-size:12px;">${esc(j.mat||'—')}</td>
+      <td style="font-family:monospace;font-size:12px;">${esc(j.dia||'—')}</td>
+      <td style="font-family:monospace;font-size:12px;">${j.len?esc(j.len)+' mm':'—'}</td>
+      <td style="text-align:center;">${j.qty||1}</td>
+      <td><span class="abadge">${esc(j.area)}</span></td>
+      <td style="white-space:nowrap;font-variant-numeric:tabular-nums;">${fD(j.start)}</td>
+      <td style="white-space:nowrap;font-variant-numeric:tabular-nums;">${fD(j.end)}</td>
+      <td style="text-align:center;color:#2b7de9;font-weight:800;font-variant-numeric:tabular-nums;">${wds}</td>
+      <td>${stC}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#324d66;">${esc(j.notes||'—')}</td>
+      ${aA}
+    </tr>`;
+  }).join('');
+  el.innerHTML=`
+    <div class="fbar">
+      <input type="text" placeholder="🔍 ค้นหาชื่อชิ้นงาน / เลขงาน / พื้นที่..." value="${esc(tQ)}" oninput="tQ=this.value;renderTable();" class="fi" style="min-width:280px;"/>
+      <select class="fi" onchange="tA=this.value;renderTable();"><option value="">📍 ทุกพื้นที่</option>${aO}</select>
+      <select class="fi" onchange="tS=this.value;renderTable();"><option value="">📊 ทุกสถานะ</option>${sO}</select>
+      <div style="color:#324d66;font-size:12px;margin-left:auto;">${vis.length}/${jobs.length} รายการ</div>
+    </div>
+    <div class="twrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>เลขที่งาน</th><th>ชื่อชิ้นงาน</th><th>เลขที่แบบ</th>
+          <th>วัสดุ</th><th>∅ (mm)</th><th>ยาว (mm)</th><th>จำนวน</th>
+          <th>พื้นที่</th><th>วันเริ่มต้น</th><th>วันสิ้นสุด</th><th>วันทำงาน</th>
+          <th>สถานะ</th><th>หมายเหตุ</th>${isAdm?'<th>จัดการ</th>':''}
+        </tr></thead>
+        <tbody>${rows||'<tr><td colspan="20" style="padding:48px;text-align:center;color:#162433;"><div style="font-size:40px;margin-bottom:10px;">🔍</div>ไม่พบข้อมูลที่ตรงกับเงื่อนไข</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+function chgSt(fk,status){JR.child(fk+'/status').set(status).catch(e=>alert('Error: '+e.message));}
+
+/* SUMMARY */
+function renderSummary(){
+  const el=document.getElementById('tc-summary');if(!el)return;
+  const tot=jobs.length,bySt={},byA={};let wds=0;
+  STS.forEach(s=>bySt[s.v]=0);
+  jobs.forEach(j=>{bySt[j.status]=(bySt[j.status]||0)+1;byA[j.area]=(byA[j.area]||0)+1;wds+=cWDs(j.start,j.end);});
+  const first=jobs[0],last=jobs[jobs.length-1];
+  const sBars=STS.map(st=>{const cnt=bySt[st.v]||0,pct=tot?(cnt/tot*100):0;return`
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:50%;background:${st.c};"></div><span style="color:${st.c};font-size:13px;font-weight:600;">${st.lb}</span></div>
+        <span style="color:#324d66;font-size:13px;font-family:monospace;">${cnt} งาน (${pct.toFixed(0)}%)</span>
+      </div>
+      <div style="height:6px;background:#0a1525;border-radius:4px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${st.c};border-radius:4px;transition:width .6s ease;"></div></div>
+    </div>`;}).join('');
+  const aCards=Object.entries(byA).sort((a,b)=>b[1]-a[1]).map(([area,cnt])=>`
+    <div style="background:#0c1d30;border:1px solid #0a1624;border-radius:8px;padding:12px 16px;">
+      <div style="color:#a5b4fc;font-size:11px;font-weight:700;margin-bottom:4px;">${esc(area)}</div>
+      <div style="color:#c5d8ea;font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;">${cnt}</div>
+      <div style="color:#324d66;font-size:11px;">งาน</div>
+    </div>`).join('');
+  const calData=[
+    {lb:'วันเริ่มต้นแผนงาน',v:first?fD(first.start):'—'},{lb:'วันสิ้นสุดงานล่าสุด',v:last?fD(last.end):'—'},
+    {lb:'รวมวันทำงานทั้งหมด',v:`${wds} วัน`},{lb:'จำนวนงานทั้งหมด',v:`${tot} งาน`},
+    {lb:'เสาร์ที่ทำงาน',v:'เว้นเสาร์ (สัปดาห์คู่)'},{lb:'วันหยุดพิเศษ 2569',v:'30 พ.ค. / 6 มิ.ย.'},
+  ];
+  el.innerHTML=`
+    <div style="margin-bottom:28px;"><div class="stitle">📊 สัดส่วนสถานะงาน</div>${sBars}</div>
+    <div style="margin-bottom:28px;"><div class="stitle">📍 งานตามพื้นที่</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">${aCards||'<div style="color:#324d66;">ยังไม่มีข้อมูล</div>'}</div>
+    </div>
+    <div style="background:#0c1d30;border:1px solid #0a1624;border-radius:8px;padding:20px;">
+      <div class="stitle" style="margin-bottom:14px;">📅 ข้อมูลปฏิทินการทำงาน</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${calData.map(({lb,v})=>`<div style="padding:10px 14px;background:#070f1c;border-radius:6px;border:1px solid #0a1624;">
+          <div style="color:#324d66;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">${lb}</div>
+          <div style="color:#c5d8ea;font-size:13px;font-weight:600;">${v}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   JOB MODAL
+═══════════════════════════════════════════════════════ */
+function defNewStart(){
+  if(!jobs.length)return dk(new Date());
+  return aD(jobs.reduce((m,j)=>j.end>m?j.end:m,jobs[0].end),1);
+}
+
+function ff(id,lb,val,tp,ph,req){
+  const r=req?'<span style="color:#f87171;margin-left:3px;">*</span>':'';
+  const ds=tp==='date'?'color-scheme:dark;':'';
+  return`<div class="ff"><label class="flbl">${lb}${r}</label>
+    <input class="finp" type="${tp}" id="${id}" value="${tp!=='number'?esc(String(val||'')):val||''}" placeholder="${ph||''}" style="${ds}"/>
+  </div>`;
+}
+
+function openJob(fk){
+  _efk=fk;
+  const job=fk?jobs.find(j=>j.fk===fk):null;
+  const isNew=!job;
+  _eos=job?job.start:null;
+  const dS=isNew?defNewStart():job.start;
+  const dE=isNew?aD(dS,6):job.end;
+  const f=isNew?{jobNo:'',partName:'',drawNo:'',mat:'',dia:'',len:'',qty:1,area:areas[0]||'',start:dS,end:dE,status:'pending',notes:''}:{...job};
+  const wds=f.start&&f.end&&f.end>=f.start?cWDs(f.start,f.end):0;
+  const aO=areas.map(a=>`<option value="${esc(a)}"${a===f.area?' selected':''}>${esc(a)}</option>`).join('');
+  const sO=STS.map(s=>`<option value="${s.v}"${s.v===f.status?' selected':''}>${s.lb}</option>`).join('');
+  document.getElementById('mr').innerHTML=`
+  <div class="mover" onclick="if(event.target===this)closeM()">
+    <div class="mbox">
+      <div class="mhd">
+        <div>
+          <h2 style="color:#c5d8ea;font-size:16px;font-weight:800;">${isNew?'➕ เพิ่มงานใหม่':'✏️ แก้ไข: '+esc(job.partName)}</h2>
+          <small style="color:#324d66;font-size:11px;margin-top:3px;display:block;">10M CNC Lathe — Job Entry Form</small>
+        </div>
+        <button class="btn-x" onclick="closeM()">✕</button>
+      </div>
+      <div class="mbody">
+        <div class="fgrid">
+          ${ff('jn','เลขที่งาน (Job No.)',f.jobNo,'text','LT-2026-XXX')}
+          ${ff('jp','ชื่อชิ้นงาน (Part Name)',f.partName,'text','Main Drive Shaft',true)}
+          ${ff('jd','เลขที่แบบ (Drawing No.)',f.drawNo,'text','DWG-XXXX')}
+          ${ff('jm','วัสดุ (Material)',f.mat,'text','S45C, SS304, AISI 4140...')}
+          ${ff('ji','เส้นผ่านศูนย์กลาง ∅ (mm)',f.dia,'text','∅450')}
+          ${ff('jl','ความยาว (Length mm)',f.len,'text','2,800')}
+          ${ff('jq','จำนวน (Qty)',f.qty||1,'number','1')}
+          <div class="ff"><label class="flbl">พื้นที่ (Area)</label><select class="finp" id="ja">${aO}</select></div>
+          ${ff('js','วันที่เริ่ม',f.start,'date','',true)}
+          ${ff('je','วันที่สิ้นสุด',f.end,'date','',true)}
+          <div class="ff"><label class="flbl">สถานะ</label><select class="finp" id="jst">${sO}</select></div>
+          <div style="display:flex;align-items:center;justify-content:center;background:#0c1d30;border-radius:8px;border:1px solid #0a1624;flex-direction:column;gap:3px;padding:14px 0;">
+            <span style="color:#324d66;font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;">วันทำงาน</span>
+            <span id="jwds" style="font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;color:${wds>0?'#2b7de9':'#f87171'};">${wds}</span>
+            <span style="color:#324d66;font-size:11px;">วัน</span>
+          </div>
+        </div>
+        <div class="ff" style="margin-top:14px;">
+          <label class="flbl">หมายเหตุ (Notes)</label>
+          <textarea class="finp" id="jno" rows="3" placeholder="Tolerance, surface finish, ข้อควรระวัง...">${esc(f.notes||'')}</textarea>
+        </div>
+        ${!isNew?'<div class="wbox">⚠️ หากเลื่อนวันที่เริ่มงาน ระบบจะถามว่าต้องการขยับงานที่ตามมาทั้งหมดโดยอัตโนมัติ</div>':''}
+        <div id="jerr" style="display:none;" class="ebox"></div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:22px;">
+          <button class="btn-2" onclick="closeM()">ยกเลิก</button>
+          <button class="btn-1" onclick="saveJob()">${isNew?'➕ เพิ่มงาน':'💾 บันทึกการแก้ไข'}</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('js').addEventListener('input',updWDS);
+  document.getElementById('je').addEventListener('input',updWDS);
+}
+
+function updWDS(){
+  const s=document.getElementById('js')?.value,e=document.getElementById('je')?.value,w=document.getElementById('jwds');
+  if(!w)return;
+  if(s&&e&&e>=s){const v=cWDs(s,e);w.textContent=v;w.style.color=v>0?'#2b7de9':'#f87171';}
+  else{w.textContent='0';w.style.color='#f87171';}
+}
+
+async function saveJob(){
+  const pn=document.getElementById('jp')?.value.trim();
+  const start=document.getElementById('js')?.value;
+  const end=document.getElementById('je')?.value;
+  const eEl=document.getElementById('jerr');
+  const showErr=msg=>{if(eEl){eEl.textContent=msg;eEl.style.display='block';}};
+  if(!pn){showErr('⚠ กรุณากรอกชื่อชิ้นงาน');return;}
+  if(!start||!end){showErr('⚠ กรุณาเลือกวันที่');return;}
+  if(end<start){showErr('⚠ วันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น');return;}
+  if(eEl)eEl.style.display='none';
+  const nj={
+    jobNo:document.getElementById('jn')?.value.trim()||'',partName:pn,
+    drawNo:document.getElementById('jd')?.value.trim()||'',mat:document.getElementById('jm')?.value.trim()||'',
+    dia:document.getElementById('ji')?.value.trim()||'',len:document.getElementById('jl')?.value.trim()||'',
+    qty:Math.max(1,parseInt(document.getElementById('jq')?.value)||1),
+    area:document.getElementById('ja')?.value||'',start,end,
+    status:document.getElementById('jst')?.value||'pending',
+    notes:document.getElementById('jno')?.value.trim()||'',
+  };
+  if(_efk&&_eos&&_eos!==start){
+    const delta=dD(_eos,start);
+    if(delta!==0){
+      const aff=jobs.filter(j=>j.fk!==_efk&&j.start>=_eos);
+      if(aff.length>0){_pc={fk:_efk,nj,delta,aff};closeM();openCasc();return;}
+    }
+  }
+  await applySave(_efk,nj,null);closeM();
+}
+
+async function applySave(fk,nj,casc){
+  try{
+    if(fk)await JR.child(fk).update(nj);
+    else await JR.push({...nj,createdAt:Date.now()});
+    if(casc&&casc.aff.length){
+      const upd={};
+      casc.aff.forEach(j=>{upd[j.fk+'/start']=aD(j.start,casc.delta);upd[j.fk+'/end']=aD(j.end,casc.delta);});
+      await JR.update(upd);
+    }
+  }catch(e){alert('เกิดข้อผิดพลาด: '+e.message);}
+}
+
+/* ── CASCADE ── */
+function openCasc(){
+  if(!_pc)return;
+  const{nj,delta,aff}=_pc;
+  const rows=aff.map((j,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:${i<aff.length-1?'1px solid #0a1624':'none'};background:${i%2===0?'rgba(8,15,28,.5)':'transparent'};">
+      <div><div style="color:#c5d8ea;font-size:13px;font-weight:600;">${esc(j.partName)}</div><div style="color:#324d66;font-size:11px;">${fD(j.start)} → ${fD(j.end)}</div></div>
+      <div style="text-align:right;flex-shrink:0;margin-left:12px;">
+        <div style="color:#fbbf24;font-size:11px;font-weight:700;">${delta>0?'+'+delta:delta} วัน</div>
+        <div style="color:#6e8fa8;font-size:11px;">${fD(aD(j.start,delta))}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('mr').innerHTML=`
+  <div class="mover">
+    <div class="mbox" style="max-width:520px;">
+      <div class="mhd"><div><h2 style="color:#fbbf24;font-size:16px;font-weight:800;">⚠️ ยืนยันการเลื่อนเวลา</h2><small style="color:#324d66;font-size:11px;display:block;margin-top:3px;">Cascade Shift Confirmation</small></div><button class="btn-x" onclick="closeCasc()">✕</button></div>
+      <div class="mbody">
+        <div style="padding:13px 16px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:8px;margin-bottom:18px;">
+          <div style="color:#c5d8ea;font-size:13px;">งาน <strong style="color:#fbbf24;">${esc(nj.partName)}</strong> ถูกเลื่อน <span style="color:#fbbf24;font-weight:800;font-size:15px;">${delta>0?'+'+delta:delta} วัน</span></div>
+        </div>
+        <div style="color:#6e8fa8;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">งานที่จะถูกขยับตาม (${aff.length} รายการ):</div>
+        <div style="border:1px solid #172a40;border-radius:8px;overflow:hidden;max-height:200px;overflow-y:auto;">${rows}</div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+          <button class="btn-2" style="font-size:12px;" onclick="cascSkip()">แก้เฉพาะงานนี้</button>
+          <button style="background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;border-radius:6px;padding:9px 20px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;" onclick="cascOK()">⚡ ขยับทุกงานที่ตามมา</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+async function cascOK(){if(!_pc)return;await applySave(_pc.fk,_pc.nj,_pc);_pc=null;closeM();}
+async function cascSkip(){if(!_pc)return;await applySave(_pc.fk,_pc.nj,null);_pc=null;closeM();}
+function closeCasc(){_pc=null;closeM();}
+
+/* ── DELETE ── */
+function openDel(fk){
+  const job=jobs.find(j=>j.fk===fk);if(!job)return;
+  _dfk=fk;
+  document.getElementById('mr').innerHTML=`
+  <div class="mover" onclick="if(event.target===this)closeM()">
+    <div style="background:#071422;border:1px solid #172a40;border-radius:12px;padding:36px;width:380px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.8);">
+      <div style="font-size:44px;margin-bottom:16px;">🗑️</div>
+      <h3 style="color:#c5d8ea;margin-bottom:10px;font-size:18px;font-weight:800;">ยืนยันการลบงาน</h3>
+      <p style="color:#6e8fa8;font-size:14px;margin-bottom:6px;line-height:1.6;">ต้องการลบงาน <strong style="color:#f87171;">${esc(job.partName)}</strong> ใช่หรือไม่?</p>
+      <p style="color:#324d66;font-size:12px;margin-bottom:24px;">การดำเนินการนี้ไม่สามารถยกเลิกได้</p>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button class="btn-2" onclick="closeM()">ยกเลิก</button>
+        <button style="background:linear-gradient(135deg,#c0202a,#8b0000);color:#fff;border:none;border-radius:6px;padding:10px 22px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;" onclick="confDel()">ลบงาน</button>
+      </div>
+    </div>
+  </div>`;
+}
+async function confDel(){if(!_dfk)return;await JR.child(_dfk).remove().catch(e=>alert('Error: '+e.message));_dfk=null;closeM();}
+
+/* ═══════════════════════════════════════════════════════
+   AREA MANAGEMENT — แก้ไข Area ตามบริษัทได้เลย
+═══════════════════════════════════════════════════════ */
+function openAreas(){_aei=null;renderAreas();}
+
+function renderAreas(){
+  const rows=areas.map((a,i)=>{
+    if(_aei===i)return`<div class="arow">
+      <input class="finp" id="aei" value="${esc(a)}" style="flex:1;" onkeydown="if(event.key==='Enter')saveAE(${i})"/>
+      <button class="abs abs-s" onclick="saveAE(${i})">บันทึก</button>
+      <button class="abs abs-c" onclick="_aei=null;renderAreas()">ยกเลิก</button>
+    </div>`;
+    return`<div class="arow">
+      <div class="adot"></div>
+      <div style="flex:1;font-size:13px;color:#c5d8ea;">${esc(a)}</div>
+      <div style="display:flex;gap:5px;">
+        <button class="abs abs-e" onclick="_aei=${i};renderAreas()">แก้ไข</button>
+        <button class="abs abs-d" onclick="delArea(${i})">ลบ</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('mr').innerHTML=`
+  <div class="mover" onclick="if(event.target===this)closeM()">
+    <div class="mbox" style="max-width:480px;">
+      <div class="mhd">
+        <div><h2 style="color:#c5d8ea;font-size:16px;font-weight:800;">📍 จัดการพื้นที่ (Area)</h2><small style="color:#324d66;font-size:11px;display:block;margin-top:3px;">เพิ่ม แก้ไข ลบ Area — ซิงค์กับทุกอุปกรณ์ผ่าน Firebase</small></div>
+        <button class="btn-x" onclick="closeM()">✕</button>
+      </div>
+      <div class="mbody">
+        <div style="border:1px solid #172a40;border-radius:8px;overflow:hidden;max-height:320px;overflow-y:auto;margin-bottom:16px;min-height:60px;">
+          ${rows||'<div style="padding:20px;text-align:center;color:#324d66;">ยังไม่มี Area — เพิ่มด้านล่าง</div>'}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <input class="finp" id="newarea" placeholder="ชื่อ Area ใหม่ เช่น ช่างกลึงที่ 1, Section B..." style="flex:1;" onkeydown="if(event.key==='Enter')addArea()"/>
+          <button class="btn-1" onclick="addArea()" style="padding:9px 18px;white-space:nowrap;">+ เพิ่ม</button>
+        </div>
+        <div style="margin-top:12px;padding:10px 14px;background:rgba(43,125,233,.06);border:1px solid rgba(43,125,233,.18);border-radius:8px;color:#5ba4f5;font-size:11px;line-height:1.7;">
+          💡 Area ที่เพิ่ม/แก้ไข/ลบ จะอัปเดตให้ทุก user ของระบบนี้ทันทีผ่าน Firebase
+        </div>
+      </div>
+      <div style="padding:14px 24px;border-top:1px solid #172a40;display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:#324d66;font-size:11px;">${areas.length} พื้นที่ในระบบ</span>
+        <button class="btn-2" onclick="closeM()">ปิด</button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>{
+    if(_aei!==null)document.getElementById('aei')?.focus();
+    else document.getElementById('newarea')?.focus();
+  },50);
+}
+
+async function addArea(){
+  const inp=document.getElementById('newarea'),val=inp?.value.trim();
+  if(!val)return;
+  if(areas.includes(val)){alert('Area นี้มีอยู่แล้ว');return;}
+  const na=[...areas,val];
+  try{await SR.child('areas').set(na);areas=na;_aei=null;renderAreas();}
+  catch(e){alert('Error: '+e.message);}
+}
+
+async function saveAE(idx){
+  const inp=document.getElementById('aei'),val=inp?.value.trim();
+  if(!val)return;
+  if(areas.some((a,i)=>i!==idx&&a===val)){alert('มีชื่อ Area นี้อยู่แล้ว');return;}
+  const na=[...areas];na[idx]=val;
+  try{await SR.child('areas').set(na);areas=na;_aei=null;renderAreas();}
+  catch(e){alert('Error: '+e.message);}
+}
+
+async function delArea(idx){
+  if(!confirm(`ลบ Area "${areas[idx]}" หรือไม่?\nงานที่ใช้ Area นี้ยังคงอยู่ แต่ Area จะหายจากตัวเลือก`))return;
+  const na=areas.filter((_,i)=>i!==idx);
+  try{await SR.child('areas').set(na);areas=na;_aei=null;renderAreas();}
+  catch(e){alert('Error: '+e.message);}
+}
+
+/* ═══════════════════════════════════════════════════════
+   PRINT
+═══════════════════════════════════════════════════════ */
+function printGantt(){
+  if(role!=='admin')return;
+  if(curTab!=='gantt')swTab('gantt',document.getElementById('tbtn-gantt'));
+  const now=new Date(),ds=`${now.getDate()} ${MTs[now.getMonth()]} ${now.getFullYear()}`;
+  const last=jobs.length?jobs[jobs.length-1]:null;
+  const ph=document.getElementById('phdr');
+  if(ph){
+    ph.style.display='block';
+    ph.innerHTML=`<h1>⚙ แผนงานเครื่องกลึง CNC 10 เมตร — Thanakrit Engineer Workshop</h1>
+      <div class="psub">10M Heavy-Duty CNC Lathe — Production Schedule · Firebase Realtime</div>
+      <div class="pmeta">
+        <span>📍 Thanakrit Engineer Workshop</span>
+        <span>📅 พิมพ์เมื่อ: ${ds}</span>
+        <span>📋 ${jobs.length} งาน | ถึง: ${last?fD(last.end):'—'}</span>
+      </div>`;
+  }
+  setTimeout(()=>{window.print();setTimeout(()=>{if(ph)ph.style.display='none';},600);},200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════════════════ */
+const INIT=[
+  {jobNo:"LT-2026-001",partName:"Main Drive Shaft",drawNo:"DWG-L001",mat:"S45C",dia:"∅450",len:"2,800",qty:2,area:"ช่างกลึงที่ 1",start:"2026-05-11",end:"2026-05-15",status:"completed",notes:"Ra 1.6 µm"},
+  {jobNo:"LT-2026-002",partName:"Rotor Shaft Assembly",drawNo:"DWG-L002",mat:"AISI 4140",dia:"∅680",len:"4,500",qty:1,area:"ช่างกลึงที่ 1",start:"2026-05-16",end:"2026-05-26",status:"completed",notes:"HT required"},
+  {jobNo:"LT-2026-003",partName:"Turbine Sleeve",drawNo:"DWG-L003",mat:"SS304",dia:"∅320",len:"1,500",qty:4,area:"ช่างกลึงที่ 2",start:"2026-05-27",end:"2026-06-03",status:"completed",notes:""},
+  {jobNo:"LT-2026-004",partName:"Pump Shaft",drawNo:"DWG-L004",mat:"S45C",dia:"∅280",len:"1,800",qty:3,area:"ช่างกลึงที่ 1",start:"2026-06-04",end:"2026-06-09",status:"in-progress",notes:""},
+  {jobNo:"LT-2026-005",partName:"Bearing Housing Bore",drawNo:"DWG-L005",mat:"GCD450",dia:"∅520",len:"850",qty:2,area:"ช่างกลึงที่ 2",start:"2026-06-10",end:"2026-06-17",status:"pending",notes:"H7 tol."},
+  {jobNo:"LT-2026-006",partName:"Coupling Flange",drawNo:"DWG-L006",mat:"S45C",dia:"∅380",len:"420",qty:6,area:"งานพิเศษ",start:"2026-06-18",end:"2026-06-24",status:"pending",notes:""},
+  {jobNo:"LT-2026-007",partName:"Propeller Shaft",drawNo:"DWG-L007",mat:"CuZn",dia:"∅200",len:"3,200",qty:1,area:"ช่างกลึงที่ 1",start:"2026-06-25",end:"2026-07-07",status:"pending",notes:"สัมผัสน้ำทะเล"},
+];
+async function resetData(){
+  if(!confirm('รีเซ็ตข้อมูลทั้งหมดกลับสู่ตัวอย่าง?\nงานและ Area ปัจจุบันจะถูกลบ'))return;
+  try{
+    await JR.remove();
+    for(const j of INIT)await JR.push({...j,createdAt:Date.now()});
+    await SR.child('areas').set(DEF_AREAS);
+    areas=[...DEF_AREAS];
+  }catch(e){alert('Error: '+e.message);}
+}
+
+/* MODAL HELPER */
+function closeM(){document.getElementById('mr').innerHTML='';_aei=null;}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
 </script>
 </body>
 </html>
