@@ -108,11 +108,13 @@ textarea.finp{resize:vertical;line-height:1.5;min-height:72px;}
 /* SUMMARY */
 .stitle{color:var(--sub);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
 
-/* FIREBASE STATUS */
-#fbst{position:fixed;bottom:18px;right:18px;z-index:500;font-size:11px;font-family:monospace;padding:5px 14px;border-radius:20px;background:rgba(255,255,255,.97);border:1px solid;box-shadow:0 2px 12px rgba(0,0,0,.10);transition:all .5s;}
+/* FIREBASE STATUS — improved pulse animation */
+#fbst{position:fixed;bottom:18px;right:18px;z-index:500;font-size:11px;font-family:monospace;padding:5px 14px;border-radius:20px;background:rgba(255,255,255,.97);border:1px solid;box-shadow:0 2px 12px rgba(0,0,0,.10);transition:all .4s;}
 #fbst.ok{color:#059669;border-color:rgba(5,150,105,.35);}
-#fbst.err{color:#dc2626;border-color:rgba(220,38,38,.3);}
+#fbst.err{color:#dc2626;border-color:rgba(220,38,38,.3);animation:pulse-err 1.5s infinite;}
 #fbst.ld{color:#d97706;border-color:rgba(217,119,6,.3);}
+#fbst.disc{color:#94a3b8;border-color:rgba(148,163,184,.4);}
+@keyframes pulse-err{0%,100%{opacity:1;}50%{opacity:.55;}}
 
 /* CREDIT */
 #credit{text-align:center;padding:16px 24px;color:var(--mut);font-size:12px;letter-spacing:1px;border-top:1px solid var(--brd);margin-top:8px;}
@@ -211,96 +213,238 @@ textarea.finp{resize:vertical;line-height:1.5;min-height:72px;}
 /* ═══════════════════════════════════════════════════════
    FIREBASE CONFIGURATION
 ═══════════════════════════════════════════════════════ */
-const FB={apiKey:"AIzaSyAad7GNxjfz3nzPeFtBkhB16fO54QAKmOw",authDomain:"fab-checklist-workshop.firebaseapp.com",databaseURL:"https://fab-checklist-workshop-default-rtdb.firebaseio.com",projectId:"fab-checklist-workshop",storageBucket:"fab-checklist-workshop.firebasestorage.app",messagingSenderId:"80900940748",appId:"1:80900940748:web:0ab64b61d5bcc200fdf369"};
+const FB={
+  apiKey:"AIzaSyATK9zz7yQkkDA22JbNnNpA6iyK8s7vM8I",
+  authDomain:"mspare-335b9.firebaseapp.com",
+  databaseURL:"https://mspare-335b9-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"mspare-335b9",
+  storageBucket:"mspare-335b9.firebasestorage.app",
+  messagingSenderId:"819703375185",
+  appId:"1:819703375185:web:85910bb0c9fa82f2cf5f70",
+  measurementId:"G-SPWNM9RSNV"
+};
 firebase.initializeApp(FB);
-const db=firebase.database();
-const JR=db.ref('lathe10m/jobs');
-const SR=db.ref('lathe10m/settings');
+const db  = firebase.database();
+const JR  = db.ref('lathe10m/jobs');
+const SR  = db.ref('lathe10m/settings');
 
 /* ═══════════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════════ */
-const _a=atob('d29ya3Nob3AyMDI2');
-const DEF_AREAS=["ช่างกลึงที่ 1","ช่างกลึงที่ 2","ช่างกลึงที่ 3","งานพิเศษ","งานซ่อมบำรุง","งานเร่งด่วน","ทั่วไป"];
-const STS=[{v:"pending",lb:"รอดำเนินการ",c:"#94a3b8"},{v:"in-progress",lb:"กำลังดำเนินการ",c:"#f59e0b"},{v:"completed",lb:"เสร็จสิ้น",c:"#10b981"},{v:"delayed",lb:"ล่าช้า",c:"#ef4444"}];
-const MTs=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
-const MTl=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
-const DT=["อา","จ","อ","พ","พฤ","ศ","ส"];
-let role='viewer',jobs=[],areas=[...DEF_AREAS],curTab='gantt';
-let _pc=null,_efk=null,_eos=null,_dfk=null,_aei=null;
-let tQ='',tA='',tS='';
+const _a = atob('d29ya3Nob3AyMDI2');
+const DEF_AREAS = ["ช่างกลึงที่ 1","ช่างกลึงที่ 2","ช่างกลึงที่ 3","งานพิเศษ","งานซ่อมบำรุง","งานเร่งด่วน","ทั่วไป"];
+const STS = [
+  {v:"pending",   lb:"รอดำเนินการ",      c:"#94a3b8"},
+  {v:"in-progress",lb:"กำลังดำเนินการ", c:"#f59e0b"},
+  {v:"completed", lb:"เสร็จสิ้น",        c:"#10b981"},
+  {v:"delayed",   lb:"ล่าช้า",            c:"#ef4444"}
+];
+const MTs = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const MTl = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const DT  = ["อา","จ","อ","พ","พฤ","ศ","ส"];
+
+let role    = 'viewer';
+let jobs    = [];
+let areas   = [...DEF_AREAS];
+let curTab  = 'gantt';
+let _pc     = null, _efk = null, _eos = null, _dfk = null, _aei = null;
+let tQ = '', tA = '', tS = '';
+let _seeded = false;           // ← flag ป้องกัน seed ซ้ำ
+let _fbConnected = false;      // ← track connection state
 
 /* ═══════════════════════════════════════════════════════
    WORKING DAY ENGINE
 ═══════════════════════════════════════════════════════ */
-const SAT_OFF_FIXED=new Set(["2026-05-16","2026-05-30","2026-06-06"]);
-const SAT_OFF_REF=new Date("2026-06-20T00:00:00");
-function dk(d){const t=new Date(d);return`${t.getFullYear()}-${("0"+(t.getMonth()+1)).slice(-2)}-${("0"+t.getDate()).slice(-2)}`;}
+const SAT_OFF_FIXED = new Set(["2026-05-16","2026-05-30","2026-06-06"]);
+const SAT_OFF_REF   = new Date("2026-06-20T00:00:00");
+
+function dk(d){
+  const t = new Date(d);
+  return `${t.getFullYear()}-${("0"+(t.getMonth()+1)).slice(-2)}-${("0"+t.getDate()).slice(-2)}`;
+}
 function isWD(date){
-  const d=new Date(date);d.setHours(0,0,0,0);
-  const w=d.getDay();
-  if(w===0)return false;
+  const d = new Date(date); d.setHours(0,0,0,0);
+  const w = d.getDay();
+  if(w===0) return false;
   if(w===6){
-    if(SAT_OFF_FIXED.has(dk(d)))return false;
-    const diff=Math.round((d-SAT_OFF_REF)/86400000);
-    if(diff<0)return true;
-    return diff%14!==0;
+    if(SAT_OFF_FIXED.has(dk(d))) return false;
+    const diff = Math.round((d - SAT_OFF_REF) / 86400000);
+    if(diff < 0) return true;
+    return diff % 14 !== 0;
   }
   return true;
 }
-function cWDs(s,e){let d=new Date(s);d.setHours(0,0,0,0);const en=new Date(e);en.setHours(0,0,0,0);let c=0;while(d<=en){if(isWD(d))c++;d.setDate(d.getDate()+1);}return c;}
-function aD(ds,n){const d=new Date(ds);d.setDate(d.getDate()+n);return dk(d);}
-function dD(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
-const fD=s=>{if(!s)return"—";const d=new Date(s);return`${d.getDate()} ${MTs[d.getMonth()]} ${d.getFullYear()}`;};
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function cWDs(s,e){
+  let d = new Date(s); d.setHours(0,0,0,0);
+  const en = new Date(e); en.setHours(0,0,0,0);
+  let c = 0;
+  while(d <= en){ if(isWD(d)) c++; d.setDate(d.getDate()+1); }
+  return c;
+}
+function aD(ds,n){ const d = new Date(ds); d.setDate(d.getDate()+n); return dk(d); }
+function dD(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
+const fD = s => {
+  if(!s) return "—";
+  const d = new Date(s);
+  return `${d.getDate()} ${MTs[d.getMonth()]} ${d.getFullYear()}`;
+};
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 /* ═══════════════════════════════════════════════════════
-   FIREBASE LISTENERS
+   FIREBASE STATUS INDICATOR
 ═══════════════════════════════════════════════════════ */
-function setFbSt(s){const e=document.getElementById('fbst');if(!e)return;e.className=s;if(s==='ok'){e.textContent='● Firebase เชื่อมต่อแล้ว';setTimeout(()=>{e.style.opacity='0';},4000);}else if(s==='err'){e.textContent='✕ Firebase ขาดการเชื่อมต่อ';e.style.opacity='1';}else{e.textContent='⟳ กำลังเชื่อมต่อ...';e.style.opacity='1';}}
+function setFbSt(state, detail){
+  const e = document.getElementById('fbst');
+  if(!e) return;
+  e.className = state;
+  const now = new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  if(state === 'ok'){
+    e.textContent = `● เชื่อมต่อแล้ว · ${now}`;
+    e.style.opacity = '1';
+    // ซ่อนหลัง 5 วินาที
+    clearTimeout(e._hide);
+    e._hide = setTimeout(()=>{ e.style.opacity='0'; }, 5000);
+  } else if(state === 'err'){
+    e.textContent = `✕ ขาดการเชื่อมต่อ${detail?' · '+detail:''}`;
+    e.style.opacity = '1';
+  } else if(state === 'disc'){
+    e.textContent = '○ Offline';
+    e.style.opacity = '1';
+  } else {
+    e.textContent = '⟳ กำลังเชื่อมต่อ...';
+    e.style.opacity = '1';
+  }
+}
 
-window.addEventListener('DOMContentLoaded',()=>{
-  updDate();renderBadge();renderHActs();renderTActs();
-  setInterval(updDate,60000);
+function updSyncTime(){
+  const now = new Date();
+  const si  = document.getElementById('hsync');
+  if(si) si.textContent = 'sync ' + now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
 
-  SR.on('value',(snap)=>{
-    const d=snap.val();
-    if(d&&d.areas){areas=Array.isArray(d.areas)?d.areas:Object.values(d.areas);}
-    else{SR.set({areas:DEF_AREAS});areas=[...DEF_AREAS];}
-    if(document.getElementById('newarea')){_aei=null;renderAreas();}
-    if(curTab==='table')renderTable();
-  },(err)=>{console.error('Settings listener error:',err);});
+/* ═══════════════════════════════════════════════════════
+   ★ FIXED: FIREBASE LISTENERS — ตรงไปตรงมา ไม่ซ้อนใน once()
+═══════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  updDate();
+  renderBadge();
+  renderHActs();
+  renderTActs();
+  setInterval(updDate, 60000);
 
-  JR.once('value').then(snap=>{
-    if(!snap.exists()){
-      const updates={};
-      INIT.forEach(j=>{const key=JR.push().key;updates[key]={...j,createdAt:Date.now()};});
-      return JR.update(updates);
-    }
-  }).catch(e=>console.error('Seed check failed:',e)).finally(()=>{
-    JR.on('value',(snap)=>{
-      const d=snap.val();
-      jobs=d?Object.entries(d).map(([k,j])=>({...j,fk:k})).sort((a,b)=>a.start.localeCompare(b.start)):[];
+  /* ── 1. CONNECTION STATE (แสดงสถานะ online/offline) ── */
+  db.ref('.info/connected').on('value', snap => {
+    _fbConnected = !!snap.val();
+    if(_fbConnected){
       setFbSt('ok');
-      renderAll();
-      const now=new Date(),si=document.getElementById('hsync');
-      if(si)si.textContent='sync '+now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    },(err)=>{
-      setFbSt('err');
-      console.error('Jobs listener error:',err);
-      const el=document.getElementById('tc-gantt');
-      if(el&&!jobs.length)el.innerHTML='<div style="text-align:center;color:#dc2626;padding:60px;"><div style="font-size:48px;margin-bottom:12px;">⚠</div>'
-        +'<div style="font-weight:700;margin-bottom:8px;">ไม่สามารถเชื่อมต่อฐานข้อมูลได้ (Permission Denied)</div>'
-        +'<div style="color:#5082a8;font-size:12px;max-width:480px;margin:0 auto;line-height:1.8;">กรุณาตรวจสอบ Firebase Realtime Database Rules ให้อนุญาต .read และ .write<br>(Firebase Console → Realtime Database → Rules)</div></div>';
-    });
+    } else {
+      setFbSt('disc');
+      // แสดงสถานะ offline ใน header sync
+      const si = document.getElementById('hsync');
+      if(si) si.textContent = '● offline';
+    }
   });
 
-  db.ref('.info/connected').on('value',(snap)=>{
-    if(snap.val())setFbSt('ok');else setFbSt('err');
+  /* ── 2. SETTINGS REAL-TIME LISTENER ── */
+  SR.on('value', snap => {
+    const d = snap.val();
+    if(d && d.areas){
+      areas = Array.isArray(d.areas) ? d.areas : Object.values(d.areas);
+    } else {
+      SR.set({ areas: DEF_AREAS }).catch(e => console.warn('SR set error:', e.message));
+      areas = [...DEF_AREAS];
+    }
+    // อัปเดต UI ที่เปิดอยู่
+    if(document.getElementById('newarea')){ _aei = null; renderAreas(); }
+    if(curTab === 'table') renderTable();
+  }, err => {
+    console.error('Settings listener error:', err.message);
+  });
+
+  /* ── 3. JOBS REAL-TIME LISTENER (หัวใจหลัก) ── */
+  /*
+     ✅ แก้ไขหลัก: ย้าย JR.on() ออกมาตรง ๆ ไม่ซ้อนใน JR.once().finally()
+        เพื่อให้ Firebase SDK จัดการ reconnect อัตโนมัติได้ถูกต้อง
+  */
+  JR.on('value', snap => {
+    const d = snap.val();
+
+    /* Seed ข้อมูลตัวอย่างถ้า DB ว่าง (ทำแค่ครั้งเดียว) */
+    if(!d && !_seeded){
+      _seeded = true;
+      const updates = {};
+      INIT.forEach(j => {
+        const key = JR.push().key;
+        updates[key] = { ...j, createdAt: Date.now() };
+      });
+      JR.update(updates).catch(e => console.error('Seed error:', e.message));
+      return; // รอ snapshot รอบถัดไปที่มีข้อมูล
+    }
+
+    /* แปลง snapshot เป็น array เรียงตาม start date */
+    jobs = d
+      ? Object.entries(d)
+          .map(([k, j]) => ({ ...j, fk: k }))
+          .sort((a, b) => a.start.localeCompare(b.start))
+      : [];
+
+    setFbSt('ok');
+    updSyncTime();
+    renderAll();
+
+  }, err => {
+    /* listener error — Firebase จะ retry อัตโนมัติเมื่อ reconnect */
+    console.error('Jobs listener error:', err.code, err.message);
+    setFbSt('err', err.code === 'PERMISSION_DENIED' ? 'Permission Denied' : err.message);
+
+    if(!jobs.length){
+      const el = document.getElementById('tc-gantt');
+      if(el) el.innerHTML = `
+        <div style="text-align:center;color:#dc2626;padding:60px;">
+          <div style="font-size:48px;margin-bottom:12px;">⚠</div>
+          <div style="font-weight:700;margin-bottom:8px;">ไม่สามารถเชื่อมต่อฐานข้อมูลได้ (${err.code||'Error'})</div>
+          <div style="color:#5082a8;font-size:12px;max-width:480px;margin:0 auto;line-height:1.8;">
+            ${err.code==='PERMISSION_DENIED'
+              ? 'กรุณาตรวจสอบ Firebase Realtime Database Rules ให้อนุญาต .read และ .write<br>(Firebase Console → Realtime Database → Rules)'
+              : 'กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต และ Firebase project settings'}
+          </div>
+          <button onclick="retryConnect()" style="margin-top:18px;padding:9px 20px;background:var(--grd);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;">
+            🔄 ลองเชื่อมต่อใหม่
+          </button>
+        </div>`;
+    }
   });
 });
 
-function updDate(){const now=new Date(),e=document.getElementById('hdate');if(e)e.textContent=`${now.getDate()} ${MTs[now.getMonth()]} ${now.getFullYear()}`;}
+/* Retry: ปิด listener เก่า แล้วเปิดใหม่ */
+function retryConnect(){
+  setFbSt('ld');
+  JR.off(); // ปิด listener ทั้งหมดบน JR
+  _seeded = false;
+  // เปิด listener ใหม่ (recursive call ผ่าน off/on ของ Firebase SDK)
+  JR.on('value', snap => {
+    const d = snap.val();
+    if(!d && !_seeded){
+      _seeded = true;
+      const updates = {};
+      INIT.forEach(j => { const key = JR.push().key; updates[key] = {...j, createdAt:Date.now()}; });
+      JR.update(updates).catch(e => console.error(e));
+      return;
+    }
+    jobs = d ? Object.entries(d).map(([k,j])=>({...j,fk:k})).sort((a,b)=>a.start.localeCompare(b.start)) : [];
+    setFbSt('ok');
+    updSyncTime();
+    renderAll();
+  }, err => {
+    setFbSt('err', err.code);
+    console.error('Retry listener error:', err.message);
+  });
+}
+
+function updDate(){
+  const now = new Date(), e = document.getElementById('hdate');
+  if(e) e.textContent = `${now.getDate()} ${MTs[now.getMonth()]} ${now.getFullYear()}`;
+}
 
 /* ═══════════════════════════════════════════════════════
    AUTH
@@ -330,47 +474,58 @@ function openLogin(){
       </div>
     </div>
   </div>`;
-  const pw=document.getElementById('apw');
-  if(pw){pw.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});setTimeout(()=>pw.focus(),50);}
+  const pw = document.getElementById('apw');
+  if(pw){ pw.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); }); setTimeout(()=>pw.focus(),50); }
 }
 
 function doLogin(){
-  const pw=document.getElementById('apw')?.value;
-  if(pw===_a){role='admin';closeM();renderBadge();renderHActs();renderTActs();renderAll();}
-  else{const e=document.getElementById('aerr');if(e){e.style.display='block';document.getElementById('apw').value='';}}
+  const pw = document.getElementById('apw')?.value;
+  if(pw === _a){ role='admin'; closeM(); renderBadge(); renderHActs(); renderTActs(); renderAll(); }
+  else{ const e=document.getElementById('aerr'); if(e){ e.style.display='block'; document.getElementById('apw').value=''; } }
 }
 
-function doLogout(){role='viewer';renderBadge();renderHActs();renderTActs();renderAll();}
+function doLogout(){ role='viewer'; renderBadge(); renderHActs(); renderTActs(); renderAll(); }
 
 function renderBadge(){
-  const e=document.getElementById('hbadge');if(!e)return;
-  e.innerHTML=role==='admin'?'<div class="rbadge admin">👑 ADMIN</div>':'<div class="rbadge viewer">👁 VIEWER</div>';
+  const e = document.getElementById('hbadge'); if(!e) return;
+  e.innerHTML = role==='admin'
+    ? '<div class="rbadge admin">👑 ADMIN</div>'
+    : '<div class="rbadge viewer">👁 VIEWER</div>';
 }
 function renderHActs(){
-  const e=document.getElementById('hacts');if(!e)return;
-  e.innerHTML=role==='admin'
-    ?'<button onclick="doLogout()" class="btn-2" style="padding:7px 14px;font-size:12px;">ออกจากระบบ</button>'
-    :'<button onclick="openLogin()" class="btn-alog">🔐 Admin Login</button>';
+  const e = document.getElementById('hacts'); if(!e) return;
+  e.innerHTML = role==='admin'
+    ? '<button onclick="doLogout()" class="btn-2" style="padding:7px 14px;font-size:12px;">ออกจากระบบ</button>'
+    : '<button onclick="openLogin()" class="btn-alog">🔐 Admin Login</button>';
 }
 function renderTActs(){
-  const e=document.getElementById('tacts');if(!e)return;
+  const e = document.getElementById('tacts'); if(!e) return;
   if(role==='admin'){
     e.innerHTML=`
       <button class="btn-print" onclick="printGantt()">🖨️ พิมพ์ Gantt</button>
       <button class="btn-areas" onclick="openAreas()">📍 จัดการ Area</button>
       <button class="btn-add" onclick="openJob(null)">➕ เพิ่มงานใหม่</button>
       <button class="btn-reset" onclick="resetData()" title="รีเซ็ตข้อมูล">🔄</button>`;
-  }else{e.innerHTML='';}
+  } else { e.innerHTML=''; }
 }
 
 /* ═══════════════════════════════════════════════════════
    RENDER
 ═══════════════════════════════════════════════════════ */
-function renderAll(){renderStats();renderCur();}
-function renderCur(){if(curTab==='gantt')renderGantt();else if(curTab==='table')renderTable();else renderSummary();}
-function swTab(t,btn){
-  curTab=t;document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');
-  ['gantt','table','summary'].forEach(id=>{const e=document.getElementById('tc-'+id);if(e)e.style.display=id===t?'':'none';});
+function renderAll(){ renderStats(); renderCur(); }
+function renderCur(){
+  if(curTab==='gantt')      renderGantt();
+  else if(curTab==='table') renderTable();
+  else                      renderSummary();
+}
+function swTab(t, btn){
+  curTab = t;
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  ['gantt','table','summary'].forEach(id=>{
+    const e = document.getElementById('tc-'+id);
+    if(e) e.style.display = id===t ? '' : 'none';
+  });
   renderCur();
 }
 
@@ -379,11 +534,14 @@ function renderStats(){
   const tot=jobs.length,done=jobs.filter(j=>j.status==='completed').length;
   const act=jobs.filter(j=>j.status==='in-progress').length,pend=jobs.filter(j=>j.status==='pending').length;
   const del=jobs.filter(j=>j.status==='delayed').length,wds=jobs.reduce((a,j)=>a+cWDs(j.start,j.end),0);
-  const el=document.getElementById('sbar');if(!el)return;
+  const el=document.getElementById('sbar'); if(!el) return;
   el.innerHTML=[
-    {i:'📋',lb:'งานทั้งหมด',v:tot,c:'#1e6bd4'},{i:'⚙',lb:'กำลังดำเนินการ',v:act,c:'#f59e0b'},
-    {i:'✅',lb:'เสร็จสิ้น',v:done,c:'#10b981'},{i:'⏳',lb:'รอดำเนินการ',v:pend,c:'#94a3b8'},
-    {i:'⚠',lb:'ล่าช้า',v:del,c:'#ef4444'},{i:'🗓',lb:'วันทำงานรวม',v:wds,c:'#7c3aed',u:'วัน'},
+    {i:'📋',lb:'งานทั้งหมด',    v:tot, c:'#1e6bd4'},
+    {i:'⚙', lb:'กำลังดำเนินการ',v:act, c:'#f59e0b'},
+    {i:'✅',lb:'เสร็จสิ้น',     v:done,c:'#10b981'},
+    {i:'⏳',lb:'รอดำเนินการ',   v:pend,c:'#94a3b8'},
+    {i:'⚠', lb:'ล่าช้า',        v:del, c:'#ef4444'},
+    {i:'🗓',lb:'วันทำงานรวม',   v:wds, c:'#7c3aed',u:'วัน'},
   ].map(c=>`<div class="scard" style="border-top:2px solid ${c.c}40;">
     <div class="slbl">${c.i} ${c.lb}</div>
     <div class="snum" style="color:${c.c};">${c.v}${c.u?`<span style="font-size:12px;color:var(--mut);margin-left:4px;">${c.u}</span>`:''}</div>
@@ -391,10 +549,13 @@ function renderStats(){
 }
 
 /* GANTT */
-const CW=36,RH=54,LW=300;
+const CW=36, RH=54, LW=300;
 function renderGantt(printMode=false){
-  const el=document.getElementById('tc-gantt');if(!el)return;
-  if(!jobs.length){el.innerHTML='<div style="text-align:center;color:var(--mut);padding:60px;"><div style="font-size:48px;margin-bottom:12px;">📅</div>ยังไม่มีข้อมูลงาน</div>';return;}
+  const el = document.getElementById('tc-gantt'); if(!el) return;
+  if(!jobs.length){
+    el.innerHTML='<div style="text-align:center;color:var(--mut);padding:60px;"><div style="font-size:48px;margin-bottom:12px;">📅</div>ยังไม่มีข้อมูลงาน</div>';
+    return;
+  }
   const today=dk(new Date());
   const ms=jobs.reduce((m,j)=>j.start<m?j.start:m,jobs[0].start);
   const me=jobs.reduce((m,j)=>j.end>m?j.end:m,jobs[0].end);
@@ -407,20 +568,19 @@ function renderGantt(printMode=false){
   const rpad=printMode?10:16;
 
   const days=[],idxMap={},months=[];
-  let c=new Date(aD(ms,-padS));const en=new Date(aD(me,padE));
-  while(c<=en){days.push(dk(c));c.setDate(c.getDate()+1);}
+  let c=new Date(aD(ms,-padS)); const en=new Date(aD(me,padE));
+  while(c<=en){ days.push(dk(c)); c.setDate(c.getDate()+1); }
   days.forEach((s,i)=>idxMap[s]=i);
   days.forEach(ds=>{
-    const dt=new Date(ds),k=`${dt.getFullYear()}-${dt.getMonth()}`;
+    const dt=new Date(ds), k=`${dt.getFullYear()}-${dt.getMonth()}`;
     const l=months[months.length-1];
-    if(!l||l.k!==k)months.push({k,lb:`${MTl[dt.getMonth()]} ${dt.getFullYear()}`,cnt:1});else l.cnt++;
+    if(!l||l.k!==k) months.push({k,lb:`${MTl[dt.getMonth()]} ${dt.getFullYear()}`,cnt:1});
+    else l.cnt++;
   });
-  const tdi=idxMap[today]??-1,totalW=LWx+days.length*CWx;
+  const tdi=idxMap[today]??-1, totalW=LWx+days.length*CWx;
 
-  /* MONTH HEADER */
   const mH=months.map(m=>`<div style="width:${m.cnt*CWx}px;flex-shrink:0;background:#e8f2ff;border-left:2px solid rgba(30,107,212,.22);display:flex;align-items:center;padding:0 8px;color:#1e6bd4;font-size:${printMode?11:13}px;font-weight:700;overflow:hidden;white-space:nowrap;">${m.lb}</div>`).join('');
 
-  /* DAY HEADER */
   const dH=days.map((ds,i)=>{
     const d=new Date(ds),off=!isWD(d),itd=ds===today,mon=d.getDay()===1;
     const bg=itd?'rgba(239,68,68,.18)':off?'rgba(180,210,240,.18)':'#e8f2ff';
@@ -433,7 +593,6 @@ function renderGantt(printMode=false){
     </div>`;
   }).join('');
 
-  /* ROWS */
   const rowsH=jobs.map((j,ri)=>{
     const st=STS.find(s=>s.v===j.status),si=idxMap[j.start],ei=idxMap[j.end];
     const isAct=j.start<=today&&j.end>=today,wds=cWDs(j.start,j.end);
@@ -481,7 +640,6 @@ function renderGantt(printMode=false){
     <div style="position:absolute;left:${LWx+tdi*CWx+CWx/2}px;top:0;bottom:0;width:2px;background:rgba(239,68,68,.12);z-index:0;pointer-events:none;"></div>
     <div style="position:absolute;left:${LWx+tdi*CWx+CWx/2-22}px;top:${printMode?52:72}px;background:#dc2626;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:3px;z-index:25;pointer-events:none;letter-spacing:.5px;">TODAY</div>`:'';
 
-  /* HEADER */
   const head=`<div style="${stH}display:flex;">
     <div style="width:${LWx}px;flex-shrink:0;${stL}background:#e8f2ff;border-right:1px solid #b8d0ea;">
       <div style="height:${printMode?28:34}px;padding:0 ${rpad}px;display:flex;align-items:center;border-bottom:1px solid #c0d8f0;">
@@ -513,16 +671,21 @@ function renderGantt(printMode=false){
     <div id="gcon" style="overflow:auto;border:1px solid #b8d0ea;border-radius:8px;box-shadow:0 2px 12px rgba(30,107,212,.08);">
       <div style="min-width:${totalW}px;position:relative;">${head}${rowsH}${gT}</div>
     </div>`;
-  if(tdi>0)setTimeout(()=>{const g=document.getElementById('gcon');if(g)g.scrollLeft=Math.max(0,tdi*CWx-280);},80);
+  if(tdi>0) setTimeout(()=>{ const g=document.getElementById('gcon'); if(g) g.scrollLeft=Math.max(0,tdi*CWx-280); },80);
 }
 
 /* TABLE */
 function renderTable(){
-  const el=document.getElementById('tc-table');if(!el)return;
+  const el=document.getElementById('tc-table'); if(!el) return;
   const today=dk(new Date()),isAdm=role==='admin';
   const vis=jobs.filter(j=>{
-    if(tA&&j.area!==tA)return false;if(tS&&j.status!==tS)return false;
-    if(tQ){const q=tQ.toLowerCase();return j.partName.toLowerCase().includes(q)||(j.jobNo||'').toLowerCase().includes(q)||(j.mat||'').toLowerCase().includes(q)||(j.area||'').toLowerCase().includes(q);}
+    if(tA&&j.area!==tA) return false;
+    if(tS&&j.status!==tS) return false;
+    if(tQ){
+      const q=tQ.toLowerCase();
+      return j.partName.toLowerCase().includes(q)||(j.jobNo||'').toLowerCase().includes(q)
+        ||(j.mat||'').toLowerCase().includes(q)||(j.area||'').toLowerCase().includes(q);
+    }
     return true;
   });
   const aO=areas.map(a=>`<option value="${esc(a)}"${a===tA?' selected':''}>${esc(a)}</option>`).join('');
@@ -576,23 +739,27 @@ function renderTable(){
     </div>`;
 }
 
-function chgSt(fk,status){JR.child(fk+'/status').set(status).catch(e=>alert('Error: '+e.message));}
+function chgSt(fk, status){
+  JR.child(fk+'/status').set(status).catch(e=>alert('Error: '+e.message));
+}
 
 /* SUMMARY */
 function renderSummary(){
-  const el=document.getElementById('tc-summary');if(!el)return;
-  const tot=jobs.length,bySt={},byA={};let wds=0;
+  const el=document.getElementById('tc-summary'); if(!el) return;
+  const tot=jobs.length,bySt={},byA={}; let wds=0;
   STS.forEach(s=>bySt[s.v]=0);
-  jobs.forEach(j=>{bySt[j.status]=(bySt[j.status]||0)+1;byA[j.area]=(byA[j.area]||0)+1;wds+=cWDs(j.start,j.end);});
+  jobs.forEach(j=>{ bySt[j.status]=(bySt[j.status]||0)+1; byA[j.area]=(byA[j.area]||0)+1; wds+=cWDs(j.start,j.end); });
   const first=jobs[0],last=jobs[jobs.length-1];
-  const sBars=STS.map(st=>{const cnt=bySt[st.v]||0,pct=tot?(cnt/tot*100):0;return`
-    <div style="margin-bottom:14px;">
+  const sBars=STS.map(st=>{
+    const cnt=bySt[st.v]||0,pct=tot?(cnt/tot*100):0;
+    return`<div style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
         <div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:50%;background:${st.c};"></div><span style="color:${st.c};font-size:13px;font-weight:600;">${st.lb}</span></div>
         <span style="color:#2d5a8a;font-size:13px;font-family:monospace;">${cnt} งาน (${pct.toFixed(0)}%)</span>
       </div>
       <div style="height:6px;background:#d5e8f8;border-radius:4px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${st.c};border-radius:4px;transition:width .6s ease;"></div></div>
-    </div>`;}).join('');
+    </div>`;
+  }).join('');
   const aCards=Object.entries(byA).sort((a,b)=>b[1]-a[1]).map(([area,cnt])=>`
     <div style="background:#f0f7ff;border:1px solid #b8d0ea;border-radius:8px;padding:12px 16px;box-shadow:0 1px 4px rgba(30,107,212,.06);">
       <div style="color:#4338ca;font-size:11px;font-weight:700;margin-bottom:4px;">${esc(area)}</div>
@@ -600,9 +767,12 @@ function renderSummary(){
       <div style="color:#5082a8;font-size:11px;">งาน</div>
     </div>`).join('');
   const calData=[
-    {lb:'วันเริ่มต้นแผนงาน',v:first?fD(first.start):'—'},{lb:'วันสิ้นสุดงานล่าสุด',v:last?fD(last.end):'—'},
-    {lb:'รวมวันทำงานทั้งหมด',v:`${wds} วัน`},{lb:'จำนวนงานทั้งหมด',v:`${tot} งาน`},
-    {lb:'เสาร์ที่ทำงาน',v:'เว้นเสาร์ (สัปดาห์คู่)'},{lb:'วันหยุดพิเศษ 2569',v:'30 พ.ค. / 6 มิ.ย.'},
+    {lb:'วันเริ่มต้นแผนงาน',   v:first?fD(first.start):'—'},
+    {lb:'วันสิ้นสุดงานล่าสุด', v:last?fD(last.end):'—'},
+    {lb:'รวมวันทำงานทั้งหมด',  v:`${wds} วัน`},
+    {lb:'จำนวนงานทั้งหมด',    v:`${tot} งาน`},
+    {lb:'เสาร์ที่ทำงาน',       v:'เว้นเสาร์ (สัปดาห์คู่)'},
+    {lb:'วันหยุดพิเศษ 2569',  v:'30 พ.ค. / 6 มิ.ย.'},
   ];
   el.innerHTML=`
     <div style="margin-bottom:28px;"><div class="stitle">📊 สัดส่วนสถานะงาน</div>${sBars}</div>
@@ -624,7 +794,7 @@ function renderSummary(){
    JOB MODAL
 ═══════════════════════════════════════════════════════ */
 function defNewStart(){
-  if(!jobs.length)return dk(new Date());
+  if(!jobs.length) return dk(new Date());
   return aD(jobs.reduce((m,j)=>j.end>m?j.end:m,jobs[0].end),1);
 }
 
@@ -639,8 +809,7 @@ function ff(id,lb,val,tp,ph,req){
 function openJob(fk){
   _efk=fk;
   const job=fk?jobs.find(j=>j.fk===fk):null;
-  const isNew=!job;
-  _eos=job?job.start:null;
+  const isNew=!job; _eos=job?job.start:null;
   const dS=isNew?defNewStart():job.start;
   const dE=isNew?aD(dS,6):job.end;
   const f=isNew?{jobNo:'',partName:'',drawNo:'',mat:'',dia:'',len:'',qty:1,area:areas[0]||'',start:dS,end:dE,status:'pending',notes:''}:{...job};
@@ -695,9 +864,9 @@ function openJob(fk){
 
 function updWDS(){
   const s=document.getElementById('js')?.value,e=document.getElementById('je')?.value,w=document.getElementById('jwds');
-  if(!w)return;
-  if(s&&e&&e>=s){const v=cWDs(s,e);w.textContent=v;w.style.color=v>0?'#1e6bd4':'#dc2626';}
-  else{w.textContent='0';w.style.color='#dc2626';}
+  if(!w) return;
+  if(s&&e&&e>=s){ const v=cWDs(s,e); w.textContent=v; w.style.color=v>0?'#1e6bd4':'#dc2626'; }
+  else{ w.textContent='0'; w.style.color='#dc2626'; }
 }
 
 async function saveJob(){
@@ -705,11 +874,11 @@ async function saveJob(){
   const start=document.getElementById('js')?.value;
   const end=document.getElementById('je')?.value;
   const eEl=document.getElementById('jerr');
-  const showErr=msg=>{if(eEl){eEl.textContent=msg;eEl.style.display='block';}};
-  if(!pn){showErr('⚠ กรุณากรอกชื่อชิ้นงาน');return;}
-  if(!start||!end){showErr('⚠ กรุณาเลือกวันที่');return;}
-  if(end<start){showErr('⚠ วันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น');return;}
-  if(eEl)eEl.style.display='none';
+  const showErr=msg=>{ if(eEl){ eEl.textContent=msg; eEl.style.display='block'; } };
+  if(!pn){ showErr('⚠ กรุณากรอกชื่อชิ้นงาน'); return; }
+  if(!start||!end){ showErr('⚠ กรุณาเลือกวันที่'); return; }
+  if(end<start){ showErr('⚠ วันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น'); return; }
+  if(eEl) eEl.style.display='none';
   const nj={
     jobNo:document.getElementById('jn')?.value.trim()||'',partName:pn,
     drawNo:document.getElementById('jd')?.value.trim()||'',mat:document.getElementById('jm')?.value.trim()||'',
@@ -723,27 +892,27 @@ async function saveJob(){
     const delta=dD(_eos,start);
     if(delta!==0){
       const aff=jobs.filter(j=>j.fk!==_efk&&j.start>=_eos);
-      if(aff.length>0){_pc={fk:_efk,nj,delta,aff};closeM();openCasc();return;}
+      if(aff.length>0){ _pc={fk:_efk,nj,delta,aff}; closeM(); openCasc(); return; }
     }
   }
-  await applySave(_efk,nj,null);closeM();
+  await applySave(_efk,nj,null); closeM();
 }
 
 async function applySave(fk,nj,casc){
   try{
-    if(fk)await JR.child(fk).update(nj);
-    else await JR.push({...nj,createdAt:Date.now()});
+    if(fk) await JR.child(fk).update(nj);
+    else   await JR.push({...nj,createdAt:Date.now()});
     if(casc&&casc.aff.length){
       const upd={};
-      casc.aff.forEach(j=>{upd[j.fk+'/start']=aD(j.start,casc.delta);upd[j.fk+'/end']=aD(j.end,casc.delta);});
+      casc.aff.forEach(j=>{ upd[j.fk+'/start']=aD(j.start,casc.delta); upd[j.fk+'/end']=aD(j.end,casc.delta); });
       await JR.update(upd);
     }
-  }catch(e){alert('เกิดข้อผิดพลาด: '+e.message);}
+  } catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); }
 }
 
-/* ── CASCADE ── */
+/* CASCADE */
 function openCasc(){
-  if(!_pc)return;
+  if(!_pc) return;
   const{nj,delta,aff}=_pc;
   const rows=aff.map((j,i)=>`
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:${i<aff.length-1?'1px solid #d5e8f8':'none'};background:${i%2===0?'rgba(240,250,255,.7)':'transparent'};">
@@ -771,13 +940,13 @@ function openCasc(){
     </div>
   </div>`;
 }
-async function cascOK(){if(!_pc)return;await applySave(_pc.fk,_pc.nj,_pc);_pc=null;closeM();}
-async function cascSkip(){if(!_pc)return;await applySave(_pc.fk,_pc.nj,null);_pc=null;closeM();}
-function closeCasc(){_pc=null;closeM();}
+async function cascOK(){ if(!_pc) return; await applySave(_pc.fk,_pc.nj,_pc); _pc=null; closeM(); }
+async function cascSkip(){ if(!_pc) return; await applySave(_pc.fk,_pc.nj,null); _pc=null; closeM(); }
+function closeCasc(){ _pc=null; closeM(); }
 
-/* ── DELETE ── */
+/* DELETE */
 function openDel(fk){
-  const job=jobs.find(j=>j.fk===fk);if(!job)return;
+  const job=jobs.find(j=>j.fk===fk); if(!job) return;
   _dfk=fk;
   document.getElementById('mr').innerHTML=`
   <div class="mover" onclick="if(event.target===this)closeM()">
@@ -793,16 +962,20 @@ function openDel(fk){
     </div>
   </div>`;
 }
-async function confDel(){if(!_dfk)return;await JR.child(_dfk).remove().catch(e=>alert('Error: '+e.message));_dfk=null;closeM();}
+async function confDel(){
+  if(!_dfk) return;
+  await JR.child(_dfk).remove().catch(e=>alert('Error: '+e.message));
+  _dfk=null; closeM();
+}
 
 /* ═══════════════════════════════════════════════════════
    AREA MANAGEMENT
 ═══════════════════════════════════════════════════════ */
-function openAreas(){_aei=null;renderAreas();}
+function openAreas(){ _aei=null; renderAreas(); }
 
 function renderAreas(){
   const rows=areas.map((a,i)=>{
-    if(_aei===i)return`<div class="arow">
+    if(_aei===i) return`<div class="arow">
       <input class="finp" id="aei" value="${esc(a)}" style="flex:1;" onkeydown="if(event.key==='Enter')saveAE(${i})"/>
       <button class="abs abs-s" onclick="saveAE(${i})">บันทึก</button>
       <button class="abs abs-c" onclick="_aei=null;renderAreas()">ยกเลิก</button>
@@ -842,42 +1015,42 @@ function renderAreas(){
     </div>
   </div>`;
   setTimeout(()=>{
-    if(_aei!==null)document.getElementById('aei')?.focus();
+    if(_aei!==null) document.getElementById('aei')?.focus();
     else document.getElementById('newarea')?.focus();
   },50);
 }
 
 async function addArea(){
   const inp=document.getElementById('newarea'),val=inp?.value.trim();
-  if(!val)return;
-  if(areas.includes(val)){alert('Area นี้มีอยู่แล้ว');return;}
+  if(!val) return;
+  if(areas.includes(val)){ alert('Area นี้มีอยู่แล้ว'); return; }
   const na=[...areas,val];
-  try{await SR.child('areas').set(na);areas=na;_aei=null;renderAreas();}
-  catch(e){alert('Error: '+e.message);}
+  try{ await SR.child('areas').set(na); areas=na; _aei=null; renderAreas(); }
+  catch(e){ alert('Error: '+e.message); }
 }
 
 async function saveAE(idx){
   const inp=document.getElementById('aei'),val=inp?.value.trim();
-  if(!val)return;
-  if(areas.some((a,i)=>i!==idx&&a===val)){alert('มีชื่อ Area นี้อยู่แล้ว');return;}
-  const na=[...areas];na[idx]=val;
-  try{await SR.child('areas').set(na);areas=na;_aei=null;renderAreas();}
-  catch(e){alert('Error: '+e.message);}
+  if(!val) return;
+  if(areas.some((a,i)=>i!==idx&&a===val)){ alert('มีชื่อ Area นี้อยู่แล้ว'); return; }
+  const na=[...areas]; na[idx]=val;
+  try{ await SR.child('areas').set(na); areas=na; _aei=null; renderAreas(); }
+  catch(e){ alert('Error: '+e.message); }
 }
 
 async function delArea(idx){
-  if(!confirm(`ลบ Area "${areas[idx]}" หรือไม่?\nงานที่ใช้ Area นี้ยังคงอยู่ แต่ Area จะหายจากตัวเลือก`))return;
+  if(!confirm(`ลบ Area "${areas[idx]}" หรือไม่?\nงานที่ใช้ Area นี้ยังคงอยู่ แต่ Area จะหายจากตัวเลือก`)) return;
   const na=areas.filter((_,i)=>i!==idx);
-  try{await SR.child('areas').set(na);areas=na;_aei=null;renderAreas();}
-  catch(e){alert('Error: '+e.message);}
+  try{ await SR.child('areas').set(na); areas=na; _aei=null; renderAreas(); }
+  catch(e){ alert('Error: '+e.message); }
 }
 
 /* ═══════════════════════════════════════════════════════
    PRINT
 ═══════════════════════════════════════════════════════ */
 function printGantt(){
-  if(role!=='admin')return;
-  if(curTab!=='gantt')swTab('gantt',document.getElementById('tbtn-gantt'));
+  if(role!=='admin') return;
+  if(curTab!=='gantt') swTab('gantt',document.getElementById('tbtn-gantt'));
   const now=new Date(),ds=`${now.getDate()} ${MTs[now.getMonth()]} ${now.getFullYear()}`;
   const last=jobs.length?jobs[jobs.length-1]:null;
   const ph=document.getElementById('phdr');
@@ -894,35 +1067,37 @@ function printGantt(){
   renderGantt(true);
   setTimeout(()=>{
     window.print();
-    setTimeout(()=>{if(ph)ph.style.display='none';renderGantt(false);},500);
+    setTimeout(()=>{ if(ph) ph.style.display='none'; renderGantt(false); },500);
   },200);
 }
 
 /* ═══════════════════════════════════════════════════════
-   RESET
+   RESET / SEED DATA
 ═══════════════════════════════════════════════════════ */
 const INIT=[
-  {jobNo:"LT-2026-001",partName:"Main Drive Shaft",drawNo:"DWG-L001",mat:"S45C",dia:"∅450",len:"2,800",qty:2,area:"ช่างกลึงที่ 1",start:"2026-05-11",end:"2026-05-15",status:"completed",notes:"Ra 1.6 µm"},
-  {jobNo:"LT-2026-002",partName:"Rotor Shaft Assembly",drawNo:"DWG-L002",mat:"AISI 4140",dia:"∅680",len:"4,500",qty:1,area:"ช่างกลึงที่ 1",start:"2026-05-16",end:"2026-05-26",status:"completed",notes:"HT required"},
-  {jobNo:"LT-2026-003",partName:"Turbine Sleeve",drawNo:"DWG-L003",mat:"SS304",dia:"∅320",len:"1,500",qty:4,area:"ช่างกลึงที่ 2",start:"2026-05-27",end:"2026-06-03",status:"completed",notes:""},
-  {jobNo:"LT-2026-004",partName:"Pump Shaft",drawNo:"DWG-L004",mat:"S45C",dia:"∅280",len:"1,800",qty:3,area:"ช่างกลึงที่ 1",start:"2026-06-04",end:"2026-06-09",status:"in-progress",notes:""},
-  {jobNo:"LT-2026-005",partName:"Bearing Housing Bore",drawNo:"DWG-L005",mat:"GCD450",dia:"∅520",len:"850",qty:2,area:"ช่างกลึงที่ 2",start:"2026-06-10",end:"2026-06-17",status:"pending",notes:"H7 tol."},
-  {jobNo:"LT-2026-006",partName:"Coupling Flange",drawNo:"DWG-L006",mat:"S45C",dia:"∅380",len:"420",qty:6,area:"งานพิเศษ",start:"2026-06-18",end:"2026-06-24",status:"pending",notes:""},
-  {jobNo:"LT-2026-007",partName:"Propeller Shaft",drawNo:"DWG-L007",mat:"CuZn",dia:"∅200",len:"3,200",qty:1,area:"ช่างกลึงที่ 1",start:"2026-06-25",end:"2026-07-07",status:"pending",notes:"สัมผัสน้ำทะเล"},
+  {jobNo:"LT-2026-001",partName:"Main Drive Shaft",     drawNo:"DWG-L001",mat:"S45C",      dia:"∅450",len:"2,800",qty:2,area:"ช่างกลึงที่ 1",start:"2026-05-11",end:"2026-05-15",status:"completed",  notes:"Ra 1.6 µm"},
+  {jobNo:"LT-2026-002",partName:"Rotor Shaft Assembly", drawNo:"DWG-L002",mat:"AISI 4140", dia:"∅680",len:"4,500",qty:1,area:"ช่างกลึงที่ 1",start:"2026-05-16",end:"2026-05-26",status:"completed",  notes:"HT required"},
+  {jobNo:"LT-2026-003",partName:"Turbine Sleeve",       drawNo:"DWG-L003",mat:"SS304",     dia:"∅320",len:"1,500",qty:4,area:"ช่างกลึงที่ 2",start:"2026-05-27",end:"2026-06-03",status:"completed",  notes:""},
+  {jobNo:"LT-2026-004",partName:"Pump Shaft",           drawNo:"DWG-L004",mat:"S45C",      dia:"∅280",len:"1,800",qty:3,area:"ช่างกลึงที่ 1",start:"2026-06-04",end:"2026-06-09",status:"in-progress",notes:""},
+  {jobNo:"LT-2026-005",partName:"Bearing Housing Bore", drawNo:"DWG-L005",mat:"GCD450",    dia:"∅520",len:"850",  qty:2,area:"ช่างกลึงที่ 2",start:"2026-06-10",end:"2026-06-17",status:"pending",    notes:"H7 tol."},
+  {jobNo:"LT-2026-006",partName:"Coupling Flange",      drawNo:"DWG-L006",mat:"S45C",      dia:"∅380",len:"420",  qty:6,area:"งานพิเศษ",      start:"2026-06-18",end:"2026-06-24",status:"pending",    notes:""},
+  {jobNo:"LT-2026-007",partName:"Propeller Shaft",      drawNo:"DWG-L007",mat:"CuZn",      dia:"∅200",len:"3,200",qty:1,area:"ช่างกลึงที่ 1",start:"2026-06-25",end:"2026-07-07",status:"pending",    notes:"สัมผัสน้ำทะเล"},
 ];
+
 async function resetData(){
-  if(!confirm('รีเซ็ตข้อมูลทั้งหมดกลับสู่ตัวอย่าง?\nงานและ Area ปัจจุบันจะถูกลบ'))return;
+  if(!confirm('รีเซ็ตข้อมูลทั้งหมดกลับสู่ตัวอย่าง?\nงานและ Area ปัจจุบันจะถูกลบ')) return;
   try{
     await JR.remove();
-    for(const j of INIT)await JR.push({...j,createdAt:Date.now()});
+    _seeded = false;
+    for(const j of INIT) await JR.push({...j, createdAt:Date.now()});
     await SR.child('areas').set(DEF_AREAS);
     areas=[...DEF_AREAS];
-  }catch(e){alert('Error: '+e.message);}
+  } catch(e){ alert('Error: '+e.message); }
 }
 
 /* MODAL HELPER */
-function closeM(){document.getElementById('mr').innerHTML='';_aei=null;}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
+function closeM(){ document.getElementById('mr').innerHTML=''; _aei=null; }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeM(); });
 </script>
 </body>
 </html>
