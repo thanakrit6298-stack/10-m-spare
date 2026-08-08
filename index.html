@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
 <title>ตารางเวลาเครื่องกลึง 10M — Thanakrit Engineer Workshop</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -130,7 +133,7 @@ textarea.finp{resize:vertical;line-height:1.5;min-height:72px;}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
   @page{size:A4 landscape;margin:8mm 10mm;}
   body{background:#fff!important;}
-  #hdr,.stats-bar,.tab-bar,#credit,.g-legend,.pbanner,#fbst{display:none!important;}
+  #hdr,.stats-bar,.tab-bar,#credit,.g-legend,.pbanner,#fbst,#verbanner{display:none!important;}
   .panel{background:#fff!important;border:none!important;padding:0!important;}
   #phdr{display:block!important;}
   #tc-table,#tc-summary{display:none!important;}
@@ -205,11 +208,17 @@ textarea.finp{resize:vertical;line-height:1.5;min-height:72px;}
 <div id="credit">
   <span style="color:#1e6bd4;font-weight:800;font-size:13px;">⚙ Thanakrit Engineer Workshop</span>
   &nbsp;·&nbsp; 10M CNC Lathe Scheduling &nbsp;·&nbsp; Firebase Realtime Sync &nbsp;·&nbsp; 2026
+  <div style="margin-top:5px;font-size:10px;color:#8fb4d6;">DB: mspare-335b9 · asia-southeast1 · build v<span id="verstamp"></span></div>
 </div>
 
 <div id="mr"></div>
 
 <script>
+/* ป้องกัน Service Worker เก่าค้างแคชหน้าเว็บไว้ (เผื่อ hosting เคยติดตั้งไว้ก่อนหน้า) */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister())).catch(()=>{});
+}
+
 /* ═══════════════════════════════════════════════════════
    FIREBASE CONFIGURATION
 ═══════════════════════════════════════════════════════ */
@@ -224,6 +233,7 @@ const FB={
   measurementId:"G-SPWNM9RSNV"
 };
 firebase.initializeApp(FB);
+console.log('[10M Lathe] Firebase project:', FB.projectId, '| DB host:', FB.databaseURL);
 const db  = firebase.database();
 const JR  = db.ref('lathe10m/jobs');
 const SR  = db.ref('lathe10m/settings');
@@ -251,6 +261,12 @@ let _pc     = null, _efk = null, _eos = null, _dfk = null, _aei = null;
 let tQ = '', tA = '', tS = '';
 let _seeded = false;           // ← flag ป้องกัน seed ซ้ำ
 let _fbConnected = false;      // ← track connection state
+let _bannerShown = false;      // ← กันแจ้งเตือนอัพเดทซ้ำ
+
+/* ★ เพิ่มเลขนี้ทีละ 1 ทุกครั้งที่แก้ไฟล์แล้วอัพโหลดทับของเดิม
+      เครื่องที่ยังถือโค้ดเวอร์ชันเก่าค้างอยู่ (เช่นแคชค้าง) จะได้รับ
+      แจ้งเตือนแบบเรียลไทม์ผ่าน Firebase ให้กดรีเฟรชเอง ไม่ต้องไล่บอกทีละเครื่อง */
+const APP_VERSION = 2;
 
 /* ═══════════════════════════════════════════════════════
    WORKING DAY ENGINE
@@ -322,6 +338,18 @@ function updSyncTime(){
   if(si) si.textContent = 'sync ' + now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
 
+/* แบนเนอร์แจ้งเตือนเมื่อเครื่องนี้ถือโค้ดเก่ากว่าที่เครื่องอื่นกำลังใช้อยู่ */
+function showUpdateBanner(){
+  if(_bannerShown) return;
+  _bannerShown = true;
+  const b = document.createElement('div');
+  b.id = 'verbanner';
+  b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2000;background:linear-gradient(135deg,#1e6bd4,#0ba2d8);color:#fff;padding:10px 16px;text-align:center;font-size:13px;font-weight:700;box-shadow:0 2px 12px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;';
+  b.innerHTML = `<span>🔄 หน้านี้เป็นเวอร์ชันเก่ากว่าที่ใช้งานอยู่ตอนนี้ — กรุณารีเฟรชเพื่อความถูกต้องของข้อมูล</span>
+    <button onclick="location.reload(true)" style="background:#fff;color:#1e6bd4;border:none;border-radius:6px;padding:6px 16px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12px;">รีเฟรชตอนนี้</button>`;
+  document.body.prepend(b);
+}
+
 /* ═══════════════════════════════════════════════════════
    ★ FIXED: FIREBASE LISTENERS — ตรงไปตรงมา ไม่ซ้อนใน once()
 ═══════════════════════════════════════════════════════ */
@@ -330,6 +358,7 @@ window.addEventListener('DOMContentLoaded', () => {
   renderBadge();
   renderHActs();
   renderTActs();
+  const vs = document.getElementById('verstamp'); if(vs) vs.textContent = APP_VERSION;
   setInterval(updDate, 60000);
 
   /* ── 1. CONNECTION STATE (แสดงสถานะ online/offline) ── */
@@ -351,9 +380,18 @@ window.addEventListener('DOMContentLoaded', () => {
     if(d && d.areas){
       areas = Array.isArray(d.areas) ? d.areas : Object.values(d.areas);
     } else {
-      SR.set({ areas: DEF_AREAS }).catch(e => console.warn('SR set error:', e.message));
+      SR.child('areas').set(DEF_AREAS).catch(e => console.warn('SR set error:', e.message));
       areas = [...DEF_AREAS];
     }
+
+    /* ── ตรวจเวอร์ชัน: ถ้ามีเครื่องอื่นโหลดโค้ดใหม่กว่าเครื่องนี้ ให้เตือนรีเฟรชแบบเรียลไทม์ ── */
+    const remoteV = d && typeof d.appVersion === 'number' ? d.appVersion : 0;
+    if(remoteV > APP_VERSION){
+      showUpdateBanner();
+    } else if(remoteV < APP_VERSION){
+      SR.child('appVersion').set(APP_VERSION).catch(()=>{});
+    }
+
     // อัปเดต UI ที่เปิดอยู่
     if(document.getElementById('newarea')){ _aei = null; renderAreas(); }
     if(curTab === 'table') renderTable();
@@ -369,15 +407,10 @@ window.addEventListener('DOMContentLoaded', () => {
   JR.on('value', snap => {
     const d = snap.val();
 
-    /* Seed ข้อมูลตัวอย่างถ้า DB ว่าง (ทำแค่ครั้งเดียว) */
+    /* Seed ข้อมูลตัวอย่างถ้า DB ว่าง (ทำแค่ครั้งเดียว, กันชนกันด้วย transaction lock) */
     if(!d && !_seeded){
       _seeded = true;
-      const updates = {};
-      INIT.forEach(j => {
-        const key = JR.push().key;
-        updates[key] = { ...j, createdAt: Date.now() };
-      });
-      JR.update(updates).catch(e => console.error('Seed error:', e.message));
+      seedIfEmpty();
       return; // รอ snapshot รอบถัดไปที่มีข้อมูล
     }
 
@@ -416,6 +449,19 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+/* Seed แบบกันชนกัน — ใช้ transaction lock กันหลายเครื่อง seed ข้อมูลซ้ำพร้อมกันตอน DB ว่าง */
+function seedIfEmpty(){
+  db.ref('lathe10m/_seedLock').transaction(cur => cur ? undefined : true)
+    .then(res => {
+      if(res.committed){
+        const updates = {};
+        INIT.forEach(j => { const key = JR.push().key; updates[key] = {...j, createdAt:Date.now()}; });
+        JR.update(updates).catch(e => console.error('Seed error:', e.message));
+      }
+    })
+    .catch(e => console.error('Seed lock error:', e.message));
+}
+
 /* Retry: ปิด listener เก่า แล้วเปิดใหม่ */
 function retryConnect(){
   setFbSt('ld');
@@ -426,9 +472,7 @@ function retryConnect(){
     const d = snap.val();
     if(!d && !_seeded){
       _seeded = true;
-      const updates = {};
-      INIT.forEach(j => { const key = JR.push().key; updates[key] = {...j, createdAt:Date.now()}; });
-      JR.update(updates).catch(e => console.error(e));
+      seedIfEmpty();
       return;
     }
     jobs = d ? Object.entries(d).map(([k,j])=>({...j,fk:k})).sort((a,b)=>a.start.localeCompare(b.start)) : [];
@@ -1088,6 +1132,7 @@ async function resetData(){
   if(!confirm('รีเซ็ตข้อมูลทั้งหมดกลับสู่ตัวอย่าง?\nงานและ Area ปัจจุบันจะถูกลบ')) return;
   try{
     await JR.remove();
+    await db.ref('lathe10m/_seedLock').remove();
     _seeded = false;
     for(const j of INIT) await JR.push({...j, createdAt:Date.now()});
     await SR.child('areas').set(DEF_AREAS);
